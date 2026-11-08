@@ -11,4 +11,10 @@ The engine never touches `window` or `document`: the web app converts each `Keyb
 `RawKey` (`{ code, key, ctrl, shift, alt, meta }`) and feeds it in. The same event stream can be
 replayed on the server, which is what makes leaderboards verifiable.
 
-Status: **M0** — keymap, layouts, environment detection, capture matrix and the `/keys` page.
+Status: **M1** — keymap + layouts + capture matrix (M0), then the grid core: immutable sheets,
+navigation (Ctrl/Cmd+Arrow, Ctrl+A region…), Ready/Enter/Edit modes, undo/redo/repeat, basic
+formatting, Windows ribbon keytips, and a shortcut registry checked against Microsoft's page
+(`verified` per platform). `/sandbox` is a keyboard-only playground on top of it.
+
+Formulas are stored but not evaluated yet: `copyCellTo` in `grid/reducer.ts` is where M2 will
+shift relative references for fill / Ctrl+Enter.
