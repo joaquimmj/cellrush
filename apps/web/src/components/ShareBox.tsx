@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { encodeResult, shareText, type ShareSummary } from "@cellrush/drills";
-import { APP_DOMAIN, APP_NAME } from "../config";
+import { APP_NAME, appHome, appUrl } from "../config";
 import { useT } from "../i18n";
 import { releaseFocus } from "../lib/prefs";
 
 /** Absolute link to a result page. */
-export const resultUrl = (s: ShareSummary) => `${window.location.origin}/r/${encodeResult(s)}`;
+export const resultUrl = (s: ShareSummary) => appUrl(`/r/${encodeResult(s)}`);
 
 /** Share text (§13 format) with copy buttons for the text and for a link to the result page. */
 export default function ShareBox({ summary }: { summary: ShareSummary }) {
   const t = useT();
   const [copied, setCopied] = useState<"text" | "link" | null>(null);
-  const text = shareText(summary, APP_NAME, APP_DOMAIN);
+  const text = shareText(summary, APP_NAME, appHome());
 
   const copy = async (what: "text" | "link") => {
     releaseFocus();

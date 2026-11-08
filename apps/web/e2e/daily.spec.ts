@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { freezeClock, playUntilResults } from "./bot";
 
-// Brief §13: "cellrush daily #42 ⏱ 48.3s / squares / score 412 · efficiency 87% / cellrush.app"
-const SHARE = /^cellrush daily #13 ⏱ \d+\.\ds\n(🟩|🟨|⬛){10}\nscore \d+ · efficiency \d{1,3}%\ncellrush\.app$/u;
+// Brief §13: "cellrush daily #42 ⏱ 48.3s / squares / score 412 · efficiency 87% / <where the app lives>"
+const SHARE = /^cellrush daily #13 ⏱ \d+\.\ds\n(🟩|🟨|⬛){10}\nscore \d+ · efficiency \d{1,3}%\n[\w.:-]+(\/cellrush)?$/u; // the app's own address (localhost in tests)
 
 test.describe("daily challenge", () => {
   test.beforeEach(async ({ page }) => {

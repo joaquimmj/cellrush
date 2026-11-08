@@ -4,8 +4,7 @@
 
 **Monkeytype for spreadsheets. How fast are you without a mouse?**
 
-<!-- The site goes live with the launch; this link starts working then. -->
-[**▶ Play now**](https://cellrush.app) · [Daily challenge](https://cellrush.app/daily) · [Analyst speedruns](https://cellrush.app/speedrun)
+[**▶ Play now**](https://joaquimmj.github.io/cellrush/) · [Daily challenge](https://joaquimmj.github.io/cellrush/daily) · [Analyst speedruns](https://joaquimmj.github.io/cellrush/speedrun)
 
 [![CI](https://github.com/joaquimmj/cellrush/actions/workflows/ci.yml/badge.svg)](https://github.com/joaquimmj/cellrush/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
@@ -19,6 +18,9 @@
 A free, open-source speed trainer for Excel keyboard shortcuts. It runs in the browser, on a
 spreadsheet engine written from scratch, and the **mouse is switched off**. Jump, select, fill,
 anchor with F4, paste values, build a P&L, all against the clock.
+
+No sign-up, no install: [open it and press a key](https://joaquimmj.github.io/cellrush/). If it made you
+faster, a ⭐ helps other analysts find it.
 
 ## Features
 
@@ -56,7 +58,7 @@ Plus amber terminal, navy, paper, high contrast and navy & gold. [Add yours →]
 
 **Browsers.** Chrome and Edge give the most keys to the page, and fullscreen + Keyboard Lock frees
 the rest. Some combos (Ctrl/Cmd + W, T, N…) belong to the browser, so drills avoid them. You can
-check your own browser at [`/keys`](https://cellrush.app/keys); its results feed
+check your own browser at [`/keys`](https://joaquimmj.github.io/cellrush/keys); its results feed
 [the capture matrix](packages/engine/src/keymap/capture-matrix.json). Playing needs a physical
 keyboard; on phones, the leaderboards still work.
 

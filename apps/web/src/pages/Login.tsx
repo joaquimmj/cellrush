@@ -1,3 +1,4 @@
+import { appUrl } from "../config";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useT } from "../i18n";
@@ -16,7 +17,7 @@ export default function Login() {
   const sendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/profile` } });
+    const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl("/profile") } });
     if (error) setError(error.message);
     else setSent(true);
   };
@@ -53,7 +54,7 @@ export default function Login() {
             <button
               key={p}
               className="w-full rounded border border-line px-3 py-2 hover:border-text"
-              onClick={() => supabase!.auth.signInWithOAuth({ provider: p, options: { redirectTo: `${window.location.origin}/profile` } })}
+              onClick={() => supabase!.auth.signInWithOAuth({ provider: p, options: { redirectTo: appUrl("/profile") } })}
             >
               {t("login.with", { provider: p === "github" ? "GitHub" : "Google" })}
             </button>
