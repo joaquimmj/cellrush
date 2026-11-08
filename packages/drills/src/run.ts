@@ -1,11 +1,40 @@
 import { dispatchKey, isModifierOnly, type GridState, type LayoutId, type Platform, type RawKey, type ShortcutCategory } from "@cellrush/engine";
 import { isReady } from "./data";
-import { mixSeed, mulberry32 } from "./rng";
+import { mixSeed, mulberry32, type Rng } from "./rng";
 import { strokeCount } from "./strokes";
+import { scenarioById } from "./scenarios";
 import { TASKS } from "./tasks";
 import type { Task } from "./types";
 
-export type RunMode = { kind: "time"; seconds: 30 | 60 | 120 } | { kind: "tasks"; count: 10 | 25 | 50 };
+export type RunMode =
+  | { kind: "time"; seconds: 30 | 60 | 120 }
+  | { kind: "tasks"; count: 10 | 25 | 50 }
+  /** One Analyst-mode scenario, against its own time limit. */
+  | { kind: "scenario"; id: string }
+  /** Endless practice (never submitted). */
+  | { kind: "learn" };
+
+/** Stable short label: "60s", "25t", "sc-pnl-banking", "learn" (DB column, share links). */
+export function modeLabel(m: RunMode): string {
+  switch (m.kind) {
+    case "time": return `${m.seconds}s`;
+    case "tasks": return `${m.count}t`;
+    case "scenario": return `sc-${m.id}`;
+    case "learn": return "learn";
+  }
+}
+
+/** How many drills end the run (Infinity = until time runs out or forever). */
+export function targetCount(m: RunMode): number {
+  return m.kind === "tasks" ? m.count : m.kind === "scenario" ? 1 : Infinity;
+}
+
+/** Time limit of a run in ms, or null. */
+export function timeLimitMs(m: RunMode): number | null {
+  if (m.kind === "time") return m.seconds * 1000;
+  if (m.kind === "scenario") return (scenarioById(m.id)?.timeLimitS ?? 180) * 1000;
+  return null;
+}
 
 export interface RunConfig {
   seed: number;
@@ -18,6 +47,8 @@ export interface RunConfig {
   difficulties?: readonly (1 | 2 | 3)[];
   /** Drop drills whose shortcuts this browser cannot capture (capture matrix). */
   isPlayable?: (task: Task) => boolean;
+  /** Custom drill choice (Learn mode's spaced repetition). Default: uniform, no immediate repeat. */
+  pick?: (rng: Rng, pool: readonly Task[], previous: Task | null) => Task;
 }
 
 /** One recorded keydown, relative to the run start. Enough to replay the run exactly (server check). */
@@ -63,6 +94,10 @@ export const unpackEvent = (e: RunEvent): RawKey => ({
 });
 
 export function taskPool(config: RunConfig): Task[] {
+  if (config.mode.kind === "scenario") {
+    const sc = scenarioById(config.mode.id);
+    return sc ? [sc] : [];
+  }
   // A drill with no path on this platform (e.g. ribbon keytips on Mac) is left out.
   return TASKS.filter((t) => optimalFor(t, config) !== null).filter(
     (t) =>
@@ -74,7 +109,7 @@ export function taskPool(config: RunConfig): Task[] {
 
 /** Optimal path of a task kind for a platform, probed with a throwaway instance. */
 function optimalFor(task: Task, config: RunConfig) {
-  const inst = task.setup(mulberry32(1), { today: config.today });
+  const inst = task.setup(mulberry32(1), { today: config.today, platform: config.platform });
   return task.optimal(inst.params)[config.platform];
 }
 
@@ -82,9 +117,13 @@ function startTask(run: RunState, index: number, now: number): CurrentTask | nul
   if (!run.pool.length) return null;
   const rng = mulberry32(mixSeed(run.config.seed, index));
   // Pick a drill kind (no immediate repeats), then let it build its own sheet.
-  let task = rng.pick(run.pool);
-  if (run.current && run.pool.length > 1) while (task.id === run.current.task.id) task = rng.pick(run.pool);
-  const inst = task.setup(rng, { today: run.config.today });
+  let task: Task;
+  if (run.config.pick) task = run.config.pick(rng, run.pool, run.current?.task ?? null);
+  else {
+    task = rng.pick(run.pool);
+    if (run.current && run.pool.length > 1) while (task.id === run.current.task.id) task = rng.pick(run.pool);
+  }
+  const inst = task.setup(rng, { today: run.config.today, platform: run.config.platform });
   const path = task.optimal(inst.params)[run.config.platform] ?? [];
   return { task, params: inst.params, state: inst.state, startedAt: now, keystrokes: 0, optimal: strokeCount(path) };
 }
@@ -96,12 +135,15 @@ export function createRun(config: RunConfig): RunState {
   return { ...base, current: startTask(base, 0, 0) };
 }
 
-const timeUp = (run: RunState, now: number) =>
-  run.config.mode.kind === "time" && run.startedAt !== null && now - run.startedAt >= run.config.mode.seconds * 1000;
+const timeUp = (run: RunState, now: number) => {
+  const limit = timeLimitMs(run.config.mode);
+  return limit !== null && run.startedAt !== null && now - run.startedAt >= limit;
+};
 
 function finish(run: RunState, now: number): RunState {
   if (run.finishedAt !== null) return run;
-  const end = run.config.mode.kind === "time" && run.startedAt !== null ? run.startedAt + run.config.mode.seconds * 1000 : now;
+  const limit = timeLimitMs(run.config.mode);
+  const end = limit !== null && run.startedAt !== null ? run.startedAt + limit : now;
   return { ...run, finishedAt: Math.min(now, end) };
 }
 
@@ -110,7 +152,7 @@ function advance(run: RunState, now: number, status: TaskResult["status"]): RunS
   const result: TaskResult = { taskId: cur.task.id, status, ms: now - cur.startedAt, keystrokes: cur.keystrokes, optimal: cur.optimal };
   const results = [...run.results, result];
   const next: RunState = { ...run, results, index: run.index + 1 };
-  if (run.config.mode.kind === "tasks" && results.length >= run.config.mode.count) return finish(next, now);
+  if (results.length >= targetCount(run.config.mode)) return finish(next, now);
   return { ...next, current: startTask(next, next.index, now) };
 }
 

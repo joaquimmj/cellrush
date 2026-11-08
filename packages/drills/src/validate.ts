@@ -1,5 +1,6 @@
 import { LAYOUTS, type LayoutId, type Platform } from "@cellrush/engine";
-import { createRun, runKey, scoreRun, tick, unpackEvent, type RunEvent, type RunMode, type RunState, type Score } from "./run";
+import { createRun, modeLabel, runKey, scoreRun, tick, timeLimitMs, unpackEvent, type RunEvent, type RunMode, type RunState, type Score } from "./run";
+import { SCENARIOS } from "./scenarios";
 import { DAILY_TASKS, dailyNumber, dailySeed, summarize, utcDate, type ShareSummary } from "./share";
 
 /** What the client sends. It never includes a score: the server computes it. */
@@ -42,8 +43,9 @@ export const LIMITS = {
   dailyGraceMs: 15 * 60_000,
 } as const;
 
-const VALID_MODES = new Set(["time:30", "time:60", "time:120", "tasks:10", "tasks:25", "tasks:50"]);
-const modeKey = (m: RunMode) => (m.kind === "time" ? `time:${m.seconds}` : `tasks:${m.count}`);
+/** Modes that can be submitted. Learn mode is practice and never ranked. */
+export const RANKED_MODES = new Set(["30s", "60s", "120s", "10t", "25t", "50t", ...SCENARIOS.map((s) => `sc-${s.id}`)]);
+const modeKey = (m: RunMode) => (m && typeof m === "object" ? modeLabel(m) : "");
 const refuse = (reason: string): Validation => ({ ok: false, reason, flags: [], ranked: false });
 
 /** Build the submission from a finished run (client side). */
@@ -74,7 +76,7 @@ function timingFlags(events: RunEvent[]): Flag[] {
 export function validateRun(sub: RunSubmission, nowMs: number): Validation {
   if (sub?.v !== 1 || !Array.isArray(sub.events)) return refuse("malformed submission");
   if (!Number.isInteger(sub.seed) || sub.seed < 0 || sub.seed > 0xffffffff) return refuse("bad seed");
-  if (!sub.mode || !VALID_MODES.has(modeKey(sub.mode))) return refuse("bad mode");
+  if (!sub.mode || !RANKED_MODES.has(modeKey(sub.mode))) return refuse("bad mode");
   if (sub.platform !== "win" && sub.platform !== "mac") return refuse("bad platform");
   if (!(sub.layout in LAYOUTS)) return refuse("bad layout");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(sub.today)) return refuse("bad date");
@@ -93,7 +95,7 @@ export function validateRun(sub: RunSubmission, nowMs: number): Validation {
   if (sub.daily) {
     if (sub.today !== today && sub.today !== yesterday) return refuse("daily is not today's");
     if (sub.seed !== dailySeed(sub.today)) return refuse("daily seed mismatch");
-    if (sub.mode.kind !== "tasks" || sub.mode.count !== DAILY_TASKS) return refuse("daily mode mismatch");
+    if (modeKey(sub.mode) !== `${DAILY_TASKS}t`) return refuse("daily mode mismatch");
   } else if (sub.today > today) {
     return refuse("date in the future");
   }
@@ -104,16 +106,19 @@ export function validateRun(sub: RunSubmission, nowMs: number): Validation {
     if (run.finishedAt !== null) break;
     run = runKey(run, unpackEvent(e), e.t).run;
   }
-  if (sub.mode.kind === "time") run = tick(run, sub.mode.seconds * 1000);
+  const limit = timeLimitMs(sub.mode);
+  if (limit !== null && sub.mode.kind === "time") run = tick(run, limit);
+  // A scenario ends when it is solved, or at its time limit (then it is simply not completed).
+  if (limit !== null && sub.mode.kind === "scenario" && run.finishedAt === null) run = tick(run, limit);
   if (run.finishedAt === null) return refuse("run not finished");
   const last = sub.events[sub.events.length - 1]!.t;
-  if (sub.mode.kind === "time" && last > sub.mode.seconds * 1000 + 1000) return refuse("events after the end of the run");
+  if (limit !== null && last > limit + 1000) return refuse("events after the end of the run");
 
   const score = scoreRun(run);
   const flags = timingFlags(sub.events);
   if (score.tpm > LIMITS.maxTpm) flags.push("impossible-tpm");
   const daily = sub.daily ? dailyNumber(sub.today) : null;
-  const label = sub.mode.kind === "time" ? `${sub.mode.seconds}s` : `${sub.mode.count}t`;
+  const label = modeLabel(sub.mode);
   return {
     ok: true,
     score,

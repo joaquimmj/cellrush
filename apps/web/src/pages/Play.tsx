@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { LAYOUT_NAMES, defaultPlatform, type LayoutId, type Platform, type ShortcutCategory } from "@cellrush/engine";
-import { createRun, scoreRun, summarize, utcDate, type RunMode } from "@cellrush/drills";
+import { createRun, modeLabel, scoreRun, summarize, utcDate, type RunMode } from "@cellrush/drills";
 import GameBoard from "../components/GameBoard";
 import Results from "../components/Results";
 import SubmitStatus from "../components/SubmitStatus";
@@ -20,7 +20,6 @@ const CATEGORIES: ShortcutCategory[] = ["navigation", "selection", "editing", "f
 
 const sameMode = (a: RunMode, b: RunMode) => JSON.stringify(a) === JSON.stringify(b);
 const parseMode = (s: string | null): RunMode | undefined => MODES.find((m) => m.label.replace(" tasks", "t") === s)?.mode;
-export const modeLabel = (m: RunMode) => (m.kind === "time" ? `${m.seconds}s` : `${m.count} tasks`);
 const randomSeed = () => Math.floor(Math.random() * 2 ** 32);
 
 export default function Play() {
@@ -82,7 +81,7 @@ export default function Play() {
         onRestart={restart}
       />
       {run.finishedAt !== null ? (
-        <Results run={run} pb={pb} onRestart={restart} status={<SubmitStatus run={run} daily={false} />} share={summarize(run, { daily: null, mode: modeLabel(run.config.mode).replace(" tasks", "t") })} />
+        <Results run={run} pb={pb} onRestart={restart} status={<SubmitStatus run={run} daily={false} />} share={summarize(run, { daily: null, mode: modeLabel(run.config.mode) })} />
       ) : (
         <GameBoard run={run} now={now} flash={flash} />
       )}

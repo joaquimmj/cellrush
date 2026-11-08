@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from "react";
 import {
-  DEFAULT_COL_WIDTH, colToLetters, displayText, getCell, inRange, rangeOf, selRange, toA1,
+  DEFAULT_COL_WIDTH, PALETTE, colToLetters, displayText, getCell, inRange, rangeOf, selRange, toA1,
   type Dialog, type GridState, type Range, type Sheet,
 } from "@cellrush/engine";
 
@@ -95,7 +95,7 @@ export default function Grid({ state, onMouseAttempt }: Props) {
   );
 }
 
-const DIALOG_OPTIONS: Record<Dialog["kind"], { title: string; options: [string, string, string][] }> = {
+const DIALOG_OPTIONS: Record<Exclude<Dialog["kind"], "color">, { title: string; options: [string, string, string][] }> = {
   pasteSpecial: {
     title: "Paste Special",
     options: [["all", "A", "All"], ["formulas", "F", "Formulas"], ["values", "V", "Values"], ["formats", "T", "Formats"]],
@@ -105,6 +105,7 @@ const DIALOG_OPTIONS: Record<Dialog["kind"], { title: string; options: [string, 
 };
 
 function DialogBox({ dialog }: { dialog: Dialog }) {
+  if (dialog.kind === "color") return <PaletteBox dialog={dialog} />;
   const spec = DIALOG_OPTIONS[dialog.kind];
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40">
@@ -166,7 +167,7 @@ const Row = memo(function Row({
               f?.italic ? "italic" : "",
               f?.underline ? "underline" : "",
             ].join(" ")}
-            style={{ color: f?.fontColor, background: f?.fillColor, ...ants }}
+            style={{ color: f?.fontColor, background: f?.fillColor, ...bordersStyle(f?.borders), ...ants }}
           >
             {isActive && state.editor ? <EditorText text={text} caret={state.editor.caret} /> : text}
           </td>
@@ -175,6 +176,39 @@ const Row = memo(function Row({
     </tr>
   );
 });
+
+/** Cell borders drawn on top of the grid lines. */
+function bordersStyle(b: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean } | undefined): React.CSSProperties {
+  if (!b) return {};
+  const line = "2px solid var(--color-text)";
+  return { borderTop: b.top ? line : undefined, borderRight: b.right ? line : undefined, borderBottom: b.bottom ? line : undefined, borderLeft: b.left ? line : undefined };
+}
+
+/** Simplified Standard Colors row (Alt, H, F, C / Alt, H, H): ← → to move, Enter to apply. */
+function PaletteBox({ dialog }: { dialog: Extract<Dialog, { kind: "color" }> }) {
+  const chosen = PALETTE[dialog.index]!;
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40">
+      <div role="dialog" aria-label={dialog.target === "font" ? "Font Color" : "Fill Color"} className="rounded border border-line bg-panel p-4 text-sm shadow-xl">
+        <h2 className="mb-3 font-bold">{dialog.target === "font" ? "Font Color" : "Fill Color"}</h2>
+        <div className="flex gap-1">
+          {PALETTE.map((c, i) => (
+            <span
+              key={c.name}
+              title={c.name}
+              className={`h-6 w-6 rounded-sm border ${i === dialog.index ? "outline-2 outline-offset-2 outline-accent" : ""} ${c.hex ? "border-line" : "border-text"}`}
+              style={{ background: c.hex ?? "transparent" }}
+            >
+              {!c.hex && <span className="block text-center text-[10px] leading-6">A</span>}
+            </span>
+          ))}
+        </div>
+        <p className="mt-2 text-xs" data-testid="palette-choice">{chosen.name}</p>
+        <p className="mt-2 text-xs text-sub">← → to choose · Enter to apply · Esc to cancel</p>
+      </div>
+    </div>
+  );
+}
 
 /** Dashed "marching ants" edges around the copied range. */
 function antsStyle(R: Range, r: number, c: number): React.CSSProperties {

@@ -6,3 +6,5 @@ export * from "./tasks";
 export * from "./run";
 export * from "./share";
 export * from "./validate";
+export * from "./scenarios";
+export * from "./learn";

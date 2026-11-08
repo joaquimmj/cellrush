@@ -3,6 +3,8 @@ import { APP_NAME, DISCLAIMER } from "./config";
 import { supabase, useAccount } from "./lib/supabase";
 import Daily from "./pages/Daily";
 import Leaderboard from "./pages/Leaderboard";
+import Learn from "./pages/Learn";
+import Speedrun from "./pages/Speedrun";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Play from "./pages/Play";
@@ -22,6 +24,8 @@ export default function App() {
         <nav className="flex gap-5 text-sm">
           <NavLink to="/" end className={nav}>play</NavLink>
           <NavLink to="/daily" className={nav}>daily</NavLink>
+          <NavLink to="/speedrun" className={nav}>speedrun</NavLink>
+          <NavLink to="/learn" className={nav}>learn</NavLink>
           <NavLink to="/leaderboard" className={nav}>leaderboard</NavLink>
           <NavLink to="/sandbox" className={nav}>sandbox</NavLink>
           <NavLink to="/keys" className={nav}>keys</NavLink>
@@ -36,6 +40,8 @@ export default function App() {
           <Route path="/daily" element={<Daily />} />
           <Route path="/r/:id" element={<Result />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/learn" element={<Learn />} />
+          <Route path="/speedrun" element={<Speedrun />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<p className="py-20 text-center text-sub">404 — nothing in this cell.</p>} />

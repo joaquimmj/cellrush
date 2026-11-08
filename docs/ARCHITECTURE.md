@@ -51,3 +51,10 @@ attempt is the ranked one, practice afterwards), share text in the §13 format
 and is the only writer of `runs`. Web: magic-link sign-in, profile (name, country, school,
 platform), automatic submission with the server's verdict, `/leaderboard` (daily, modes,
 schools, countries). `packages/server-tests` runs against the local stack (`pnpm test:db`).
+
+**M6**: `packages/drills/src/scenarios.ts`: three Analyst-mode speedruns (P&L to banking
+standards, revenue projection, data cleanup), each a list of conditions with a pass/fail
+checklist; conditions needing a Windows-only shortcut (font colour, autofit) are not judged on
+Mac. `learn.ts`: hints (`describePath`) and Leitner-box spaced repetition. Engine: borders
+(Ctrl+Shift+& / _), font and fill colour (Alt, H, F, C / Alt, H, H with a simplified palette).
+Pages `/speedrun` (live checklist, per-scenario leaderboards by time) and `/learn`.

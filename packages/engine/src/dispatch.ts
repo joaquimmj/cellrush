@@ -60,6 +60,7 @@ export function dispatchKey(st: GridState, raw: RawKey, ctx: DispatchContext): D
     if (isModifierOnly(raw)) return { state: st, handled: false };
     if (raw.code === "Escape") return { state: reduce(st, { type: "cancel" }), handled: true };
     if (raw.code === "Enter" || raw.code === "NumpadEnter") return { state: reduce(st, { type: "dialogConfirm" }), handled: true };
+    if (raw.code.startsWith("Arrow")) return { state: reduce(st, { type: "dialogKey", key: raw.code }), handled: true };
     const ch = charOf(raw, ctx.layout);
     if (ch && !raw.ctrl && !raw.meta) return { state: reduce(st, { type: "dialogKey", key: ch }), handled: true };
     return { state: st, handled: true };

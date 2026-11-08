@@ -102,11 +102,15 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   def({ id: "format-percent", category: "formatting", action: { type: "numberFormat", format: "percent" }, win: [{ ctrl: true, shift: true, code: "Digit5" }], mac: [{ ctrl: true, shift: true, code: "Digit5" }], verified: V, notes: "Ctrl+Shift+% on US layouts." }),
   def({ id: "format-date", category: "formatting", action: { type: "numberFormat", format: "date" }, win: [{ ctrl: true, shift: true, code: "Digit3" }], mac: [{ ctrl: true, shift: true, code: "Digit3" }], verified: V, notes: "Ctrl+Shift+# on US layouts." }),
   def({ id: "format-general", category: "formatting", action: { type: "numberFormat", format: "general" }, win: [{ ctrl: true, shift: true, code: "Backquote" }], mac: [{ ctrl: true, shift: true, code: "Backquote" }], verified: V, notes: "Ctrl+Shift+~ on US layouts." }),
+  def({ id: "outline-border", category: "formatting", action: { type: "outlineBorder" }, win: [{ ctrl: true, shift: true, code: "Digit7" }], mac: [{ meta: true, alt: true, code: "Digit0" }], verified: V, notes: "Ctrl+Shift+& on US layouts (positional)." }),
+  def({ id: "remove-borders", category: "formatting", action: { type: "removeBorders" }, win: [{ ctrl: true, shift: true, code: "Minus" }], mac: [{ meta: true, alt: true, code: "Minus" }], verified: V, notes: "Ctrl+Shift+_ on US layouts (positional)." }),
   // ── formulas ──
   def({ id: "show-formulas", category: "formulas", action: { type: "toggleShowFormulas" }, win: [{ ctrl: true, code: "Backquote" }], mac: [{ ctrl: true, code: "Backquote" }], verified: V }),
   // ── ribbon keytips (Windows) ──
   def({ id: "autofit-column", category: "ribbon", action: { type: "autofitColumn" }, win: { keytip: ["H", "O", "I"] }, mac: null, verified: { win: false, mac: false }, notes: "Ribbon keytip; not on the MS shortcut page. Verify in Excel desktop." }),
   def({ id: "increase-decimal", category: "ribbon", action: { type: "decimals", delta: 1 }, win: { keytip: ["H", "0"] }, mac: null, verified: { win: false, mac: false }, notes: "Ribbon keytip; verify in Excel desktop." }),
+  def({ id: "font-color", category: "ribbon", action: { type: "colorDialog", target: "font" }, win: { keytip: ["H", "F", "C"] }, mac: null, verified: { win: false, mac: false }, notes: "Ribbon keytip; then ← → through a simplified Standard Colors row and Enter. No Mac shortcut exists." }),
+  def({ id: "fill-color", category: "ribbon", action: { type: "colorDialog", target: "fill" }, win: { keytip: ["H", "H"] }, mac: null, verified: { win: false, mac: false }, notes: "Ribbon keytip; same palette as font colour." }),
   def({ id: "decrease-decimal", category: "ribbon", action: { type: "decimals", delta: -1 }, win: { keytip: ["H", "9"] }, mac: null, verified: { win: false, mac: false }, notes: "Ribbon keytip; verify in Excel desktop." }),
 ];
 

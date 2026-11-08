@@ -32,7 +32,8 @@ export type InsertChoice = "row" | "col";
 export type Dialog =
   | { kind: "pasteSpecial"; choice: PasteMode }
   | { kind: "insert"; choice: InsertChoice }
-  | { kind: "delete"; choice: InsertChoice };
+  | { kind: "delete"; choice: InsertChoice }
+  | { kind: "color"; target: "font" | "fill"; index: number };
 
 /** `anchor`..`focus` is the selected rectangle; `active` is the white cell inside it. */
 export interface Selection {
@@ -132,7 +133,11 @@ export type Action =
   | { type: "toggleAnchor" }
   | { type: "nextSheet" }
   | { type: "prevSheet" }
-  | { type: "insertSheet" };
+  | { type: "insertSheet" }
+  // ── M6 ──
+  | { type: "colorDialog"; target: "font" | "fill" }
+  | { type: "outlineBorder" }
+  | { type: "removeBorders" };
 
 export type ActionType = Action["type"];
 

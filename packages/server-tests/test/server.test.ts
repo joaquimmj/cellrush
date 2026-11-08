@@ -158,3 +158,29 @@ describe("leaderboards", () => {
     for (const row of data!) expect(row.players).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe("speedrun scenarios", () => {
+  const scenario = (id: string, seed: number): RunConfig => ({ seed, mode: { kind: "scenario", id }, platform: "win", layout: "us", today: utcDate(Date.now()) });
+
+  it("a solved scenario is stored and ranked by time; an unsolved one is not on the board", async () => {
+    const solver = await newUser();
+    const quitter = await newUser();
+    const run = playHuman(scenario("revenue-projection", 41), 41);
+    const ok = await submit(solver.token, subOf(run));
+    expect(ok.status, JSON.stringify(ok.body)).toBe(200);
+    expect(ok.body).toMatchObject({ ranked: true, summary: { mode: "sc-revenue-projection", completed: 1 } });
+
+    // Gives up with Shift+Esc: a valid run, but not completed.
+    const sub = subOf(playHuman(scenario("revenue-projection", 42), 42));
+    const quit = await submit(quitter.token, { ...sub, events: [{ t: 0, code: "Escape", key: "Escape", mods: 2 }] });
+    expect(quit.status).toBe(200);
+    expect(quit.body!.summary.completed).toBe(0);
+
+    const anon = createClient(API_URL, ANON_KEY, { auth: { persistSession: false } });
+    const { data, error } = await anon.rpc("leaderboard_scenario", { p_id: "revenue-projection", p_platform: "win" });
+    expect(error).toBeNull();
+    const mine = data!.find((r: { display_name: string }) => r.display_name === `player ${solver.id.slice(0, 8)}`);
+    expect(mine?.elapsed_ms).toBe(Math.round(ok.body!.summary.elapsedMs));
+    expect(data!.some((r: { display_name: string }) => r.display_name === `player ${quitter.id.slice(0, 8)}`)).toBe(false);
+  });
+});

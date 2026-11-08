@@ -10,7 +10,7 @@ import {
   type Action, type Dialog, type Editor, type GridState, type InsertChoice, type PasteMode, type Selection,
 } from "./state";
 import { insertLines } from "./structure";
-import type { Cell, CellFormat, Sheet } from "./types";
+import { PALETTE, type Cell, type CellFormat, type Sheet } from "./types";
 import { hasFormat, makeCell } from "./value";
 
 export { copyCellTo } from "./clipboard";
@@ -122,6 +122,26 @@ function applyFormat(sheet: Sheet, R: Range, fn: (f: CellFormat, cell: Cell | un
   return setCells(sheet, writes);
 }
 
+/** Ctrl+Shift+& : a box around the selection (only the outer edges of each cell). */
+function outline(sheet: Sheet, R: Range): Sheet {
+  const writes: [CellAddr, Cell][] = [];
+  for (const a of cellsIn(R)) {
+    const prev = getCell(sheet, a);
+    const edge = { top: a.r === R.r1, bottom: a.r === R.r2, left: a.c === R.c1, right: a.c === R.c2 };
+    if (!edge.top && !edge.bottom && !edge.left && !edge.right) continue;
+    const old = prev?.format.borders ?? {};
+    const borders = {
+      top: old.top || edge.top || undefined,
+      bottom: old.bottom || edge.bottom || undefined,
+      left: old.left || edge.left || undefined,
+      right: old.right || edge.right || undefined,
+    };
+    const format = { ...(prev?.format ?? {}), borders };
+    writes.push([a, prev ? { ...prev, format } : { raw: "", value: null, format }]);
+  }
+  return setCells(sheet, writes);
+}
+
 function fill(sheet: Sheet, R: Range, down: boolean): Sheet {
   const bounds = { rows: sheet.rows, cols: sheet.cols };
   const writes: [CellAddr, Cell | undefined][] = [];
@@ -206,7 +226,7 @@ function nextSheetName(sheets: readonly Sheet[]): string {
 
 // ───────────────────────────── dialogs ─────────────────────────────
 
-const DIALOG_KEYS: Record<Dialog["kind"], Record<string, string>> = {
+const DIALOG_KEYS: Record<Exclude<Dialog["kind"], "color">, Record<string, string>> = {
   pasteSpecial: { a: "all", v: "values", f: "formulas", t: "formats" },
   insert: { r: "row", c: "col" },
   delete: { r: "row", c: "col" },
@@ -218,12 +238,21 @@ function reduceDialog(st: GridState, a: Action): GridState {
     case "cancel":
       return { ...st, dialog: null };
     case "dialogKey": {
+      if (d.kind === "color") {
+        const step = a.key === "ArrowRight" || a.key === "ArrowDown" ? 1 : a.key === "ArrowLeft" || a.key === "ArrowUp" ? -1 : 0;
+        const index = Math.max(0, Math.min(PALETTE.length - 1, d.index + step));
+        return { ...st, dialog: { ...d, index } };
+      }
       const choice = DIALOG_KEYS[d.kind][a.key.toLowerCase()];
       return choice ? { ...st, dialog: { ...d, choice } as Dialog } : st;
     }
     case "dialogConfirm":
     case "commit": {
       const closed = { ...st, dialog: null };
+      if (d.kind === "color") {
+        const hex = PALETTE[d.index]!.hex;
+        return reduceReady(closed, { type: "setFormat", patch: d.target === "font" ? { fontColor: hex } : { fillColor: hex } });
+      }
       if (d.kind === "pasteSpecial") return doPaste(closed, d.choice);
       return structural(closed, d.choice, d.kind === "insert");
     }
@@ -326,6 +355,13 @@ function reduceReady(st: GridState, a: Action): GridState {
     }
     case "toggleShowFormulas":
       return { ...st, showFormulas: !st.showFormulas };
+    case "colorDialog":
+      // Starts on Automatic, like the top-left of Excel's palette.
+      return { ...st, dialog: { kind: "color", target: a.target, index: 0 } };
+    case "outlineBorder":
+      return mutateSheet(st, outline(sheet, R), { repeatable: a, keepClipboard: true });
+    case "removeBorders":
+      return mutateSheet(st, applyFormat(sheet, R, (f) => ({ ...f, borders: undefined })), { repeatable: a, keepClipboard: true });
     case "copy":
     case "cut":
       return { ...st, clipboard: snapshot(sheet, st.sheetIndex, R, a.type === "cut") };

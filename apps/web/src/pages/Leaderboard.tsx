@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import type { Platform } from "@cellrush/engine";
 import { dailyNumber, squaresOf, utcDate } from "@cellrush/drills";
 import { supabase } from "../lib/supabase";
 import { COUNTRIES } from "./Profile";
 
-type Tab = "daily" | "30s" | "60s" | "120s" | "25t" | "50t" | "schools" | "countries";
+type Tab = "daily" | "30s" | "60s" | "120s" | "25t" | "50t" | "schools" | "countries" | "sc-pnl-banking" | "sc-revenue-projection" | "sc-clean-data";
 const TABS: { id: Tab; label: string }[] = [
   { id: "daily", label: "today's daily" },
   { id: "30s", label: "30s" },
@@ -14,13 +15,19 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "50t", label: "50 tasks" },
   { id: "schools", label: "schools" },
   { id: "countries", label: "countries" },
+  { id: "sc-pnl-banking", label: "P&L speedrun" },
+  { id: "sc-revenue-projection", label: "projection speedrun" },
+  { id: "sc-clean-data", label: "cleanup speedrun" },
 ];
+const isScenario = (t: Tab) => t.startsWith("sc-");
+const fmtTime = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}.${Math.floor((ms % 1000) / 100)}`;
 const countryName = (c: string | null) => (c ? COUNTRIES.find(([k]) => k === c)?.[1] ?? c : "");
 
 type Row = Record<string, string | number | null>;
 
 export default function Leaderboard() {
-  const [tab, setTab] = useState<Tab>("daily");
+  const [search] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => (search.get("tab") === "scenarios" ? "sc-pnl-banking" : "daily"));
   const [platform, setPlatform] = useState<Platform>("win");
   const [groupMode, setGroupMode] = useState<"30s" | "60s" | "120s">("60s");
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -32,7 +39,8 @@ export default function Leaderboard() {
     setRows(null);
     setError(null);
     const q =
-      tab === "daily" ? supabase.rpc("leaderboard_daily", { p_daily: dailyNumber(today), p_platform: platform })
+      isScenario(tab) ? supabase.rpc("leaderboard_scenario", { p_id: tab.slice(3), p_platform: platform })
+      : tab === "daily" ? supabase.rpc("leaderboard_daily", { p_daily: dailyNumber(today), p_platform: platform })
       : tab === "schools" || tab === "countries"
         ? supabase.rpc("leaderboard_groups", { p_group: tab === "schools" ? "school" : "country", p_mode: groupMode, p_platform: platform })
         : supabase.rpc("leaderboard_mode", { p_mode: tab, p_platform: platform });
@@ -62,7 +70,7 @@ export default function Leaderboard() {
         )}
       </div>
       <p className="text-xs text-sub">
-        {tab === "daily" ? `Daily #${dailyNumber(today)}, first attempts only. ` : groups ? "Average of each member's best run; 3 players minimum. " : "Best run per player. "}
+        {isScenario(tab) ? "Fastest completed run per player. " : tab === "daily" ? `Daily #${dailyNumber(today)}, first attempts only. ` : groups ? "Average of each member's best run; 3 players minimum. " : "Best run per player. "}
         Every score was replayed and checked on the server.
       </p>
       {error && <p className="text-bad">{error}</p>}
@@ -74,7 +82,7 @@ export default function Leaderboard() {
             <tr>
               <th className="py-1 pr-2">#</th>
               {groups ? <><th>{tab === "schools" ? "school" : "country"}</th><th>players</th><th className="text-right">avg</th><th className="text-right">best</th></>
-                : <><th>player</th><th>school</th><th>country</th><th className="text-right">score</th><th className="text-right">efficiency</th>{tab === "daily" && <th className="pl-3">run</th>}</>}
+                : <><th>player</th><th>school</th><th>country</th><th className="text-right">{isScenario(tab) ? "time" : "score"}</th><th className="text-right">efficiency</th>{tab === "daily" && <th className="pl-3">run</th>}</>}
             </tr>
           </thead>
           <tbody>
@@ -93,7 +101,7 @@ export default function Leaderboard() {
                     <td className="font-bold">{r.display_name}</td>
                     <td className="text-sub">{r.school ?? ""}</td>
                     <td className="text-sub">{countryName(r.country as string | null)}</td>
-                    <td className="text-right font-bold text-accent">{r.score}</td>
+                    <td className="text-right font-bold text-accent">{isScenario(tab) ? fmtTime(Number(r.elapsed_ms)) : r.score}</td>
                     <td className="text-right">{Math.round(Number(r.efficiency) * 100)}%</td>
                     {tab === "daily" && <td className="pl-3 tracking-widest">{squaresOf({ squares: String(r.squares ?? "") } as never)}</td>}
                   </>

@@ -1,5 +1,5 @@
 import type { LayoutId, Platform } from "@cellrush/engine";
-import type { RunMode, ShareSummary } from "@cellrush/drills";
+import { modeLabel, type LearnBoxes, type RunMode, type ShareSummary } from "@cellrush/drills";
 
 /** Per-viewer conveniences in localStorage. Every access is guarded: storage can be blocked. */
 function read<T>(key: string, fallback: T): T {
@@ -28,7 +28,7 @@ const PREFS = "cellrush.prefs.v1";
 export const loadPrefs = (): Prefs => read<Prefs>(PREFS, { mode: { kind: "time", seconds: 60 } });
 export const savePrefs = (p: Prefs) => write(PREFS, p);
 
-export const modeKey = (m: RunMode, platform: Platform) => `${m.kind === "time" ? `${m.seconds}s` : `${m.count}t`}-${platform}`;
+export const modeKey = (m: RunMode, platform: Platform) => `${modeLabel(m)}-${platform}`;
 
 const PB = "cellrush.pb.v1";
 export function personalBest(key: string): number {
@@ -60,4 +60,11 @@ export function saveDailyAttempt(s: ShareSummary): boolean {
   if (all[k]) return false;
   write(DAILY, { ...all, [k]: s });
   return true;
+}
+
+// ── Learn mode: Leitner boxes per drill, per platform ──
+const LEARN = "cellrush.learn.v1";
+export const loadBoxes = (platform: Platform): LearnBoxes => read<Record<string, LearnBoxes>>(LEARN, {})[platform] ?? {};
+export function saveBoxes(platform: Platform, boxes: LearnBoxes) {
+  write(LEARN, { ...read<Record<string, LearnBoxes>>(LEARN, {}), [platform]: boxes });
 }

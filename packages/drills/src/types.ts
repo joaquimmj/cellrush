@@ -1,9 +1,11 @@
-import type { GridState, Range, ShortcutCategory } from "@cellrush/engine";
+import type { GridState, Platform, Range, ShortcutCategory } from "@cellrush/engine";
 import type { Rng } from "./rng";
 
 export interface SetupContext {
   /** "Today" for the run (YYYY-MM-DD), so Ctrl+; is deterministic. */
   today: string;
+  /** Platform of the run (scenarios judge some conditions on Windows only). */
+  platform?: Platform;
 }
 
 export interface TaskInstance<P> {
