@@ -1,5 +1,5 @@
 import { dateToSerial } from "./display";
-import type { Cell, CellFormat, CellValue } from "./types";
+import type { Cell, CellFormat, CellValue, ErrorCode } from "./types";
 
 const NUMBER = /^\(?-?(?:\d{1,3}(?:,\d{3})+|\d*)(?:\.\d+)?\)?$/;
 const DATE = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
@@ -9,6 +9,9 @@ export function parseRaw(raw: string, dateStyle: "mdy" | "dmy" = "mdy"): { value
   const t = raw.trim();
   if (t === "") return { value: null };
   if (t.startsWith("=")) return { value: null };
+  if (/^#(?:REF!|DIV\/0!|NAME\?|VALUE!|CIRC!|ERROR!)$/.test(t.toUpperCase())) {
+    return { value: { error: t.toUpperCase() as ErrorCode } };
+  }
   const date = DATE.exec(t);
   if (date) {
     const [a, b, y] = [Number(date[1]), Number(date[2]), Number(date[3])];

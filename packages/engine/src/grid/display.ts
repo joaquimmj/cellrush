@@ -1,3 +1,4 @@
+import { generalNumber } from "../formula/evaluator";
 import type { Cell, NumberFormat } from "./types";
 import { isError } from "./types";
 
@@ -43,7 +44,7 @@ export function displayText(cell: Cell | undefined, showFormulas = false, dateSt
   if (!cell) return "";
   if (showFormulas && cell.raw.startsWith("=")) return cell.raw;
   const v = cell.value;
-  if (v === null) return cell.raw.startsWith("=") ? cell.raw : "";
+  if (v === null) return "";
   if (isError(v)) return v.error;
   if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
   if (typeof v === "string") return v;
@@ -60,6 +61,6 @@ export function displayText(cell: Cell | undefined, showFormulas = false, dateSt
     case "date":
       return serialToDate(v, dateStyle);
     default:
-      return cell.format.decimals !== undefined ? v.toFixed(dec) : String(v);
+      return cell.format.decimals !== undefined ? v.toFixed(dec) : generalNumber(v);
   }
 }

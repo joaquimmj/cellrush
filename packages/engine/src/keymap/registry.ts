@@ -76,7 +76,23 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   def({ id: "undo", category: "editing", action: { type: "undo" }, win: [{ ctrl: true, char: "z" }], mac: [{ meta: true, char: "z" }, { ctrl: true, char: "z" }], verified: V }),
   def({ id: "redo", category: "editing", action: { type: "redoOrRepeat" }, win: [{ ctrl: true, char: "y" }], mac: null, verified: { win: true, mac: false }, notes: "Windows: MS lists Ctrl+Y as Repeat; Excel redoes first when there is something to redo." }),
   def({ id: "redo-mac", category: "editing", action: { type: "redo" }, win: null, mac: [{ meta: true, char: "y" }, { ctrl: true, char: "y" }, { meta: true, shift: true, char: "z" }], verified: { win: false, mac: true } }),
-  def({ id: "repeat", category: "editing", action: { type: "repeat" }, win: [{ code: "F4" }], mac: null, verified: { win: true, mac: false }, notes: "F4 outside edit mode. In edit mode F4 toggles $ anchoring (M2)." }),
+  def({ id: "repeat", category: "editing", action: { type: "repeat" }, win: [{ code: "F4" }], mac: null, verified: { win: true, mac: false }, notes: "Ready mode: repeat last action. While editing a formula: cycle $ anchoring of the reference at the caret." }),
+  // ── clipboard ──
+  def({ id: "copy", category: "clipboard", action: { type: "copy" }, win: [{ ctrl: true, char: "c" }], mac: [{ meta: true, char: "c" }, { ctrl: true, char: "c" }], verified: V }),
+  def({ id: "cut", category: "clipboard", action: { type: "cut" }, win: [{ ctrl: true, char: "x" }], mac: [{ meta: true, char: "x" }, { ctrl: true, char: "x" }], verified: V }),
+  def({ id: "paste", category: "clipboard", action: { type: "paste" }, win: [{ ctrl: true, char: "v" }], mac: [{ meta: true, char: "v" }, { ctrl: true, char: "v" }], verified: V }),
+  def({ id: "paste-special", category: "clipboard", action: { type: "pasteSpecialDialog" }, win: [{ ctrl: true, alt: true, char: "v" }], mac: [{ meta: true, ctrl: true, char: "v" }, { ctrl: true, alt: true, char: "v" }, { meta: true, alt: true, char: "v" }], verified: V, notes: "Then V (values), F (formulas), T (formats), A (all) and Enter. Letters verified for Windows; Mac page lists none." }),
+  def({ id: "paste-special-legacy", category: "ribbon", action: { type: "pasteSpecialDialog" }, win: { keytip: ["E", "S"] }, mac: null, verified: { win: true, mac: false }, notes: "Legacy Excel 2003 menu path Alt, E, S." }),
+  // ── rows & columns ──
+  def({ id: "insert-cells", category: "rows-cols", action: { type: "insertCells" }, win: [{ ctrl: true, shift: true, code: "Equal" }], mac: [{ ctrl: true, shift: true, code: "Equal" }], verified: V, notes: "Whole rows/columns selected: inserts directly. Otherwise a dialog: R = entire row, C = entire column (dialog letters are not on the MS page)." }),
+  def({ id: "delete-cells", category: "rows-cols", action: { type: "deleteCells" }, win: [{ ctrl: true, code: "Minus" }], mac: [{ meta: true, code: "Minus" }, { ctrl: true, code: "Minus" }], verified: V, notes: "Same dialog rules as insert." }),
+  // ── formulas ──
+  def({ id: "autosum", category: "formulas", action: { type: "autoSum" }, win: [{ alt: true, code: "Equal" }], mac: [{ meta: true, shift: true, char: "t" }], verified: V }),
+  def({ id: "toggle-anchor", category: "formulas", action: { type: "toggleAnchor" }, win: null, mac: [{ meta: true, char: "t" }, { code: "F4" }], verified: { win: false, mac: true }, notes: "Windows uses F4 (the 'repeat' entry) for this while editing. Cmd+T is browser-reserved: needs the capture matrix." }),
+  // ── sheets ──
+  def({ id: "next-sheet", category: "sheets", action: { type: "nextSheet" }, win: [{ ctrl: true, code: "PageDown" }], mac: [{ ctrl: true, code: "PageDown" }, { alt: true, code: "ArrowRight" }], verified: V }),
+  def({ id: "prev-sheet", category: "sheets", action: { type: "prevSheet" }, win: [{ ctrl: true, code: "PageUp" }], mac: [{ alt: true, code: "ArrowLeft" }, { ctrl: true, code: "PageUp" }], verified: V, notes: "Mac page lists Ctrl+Page down for both directions (typo); Ctrl+Page up assumed for previous." }),
+  def({ id: "insert-sheet", category: "sheets", action: { type: "insertSheet" }, win: [{ shift: true, code: "F11" }, { alt: true, shift: true, code: "F1" }], mac: [{ shift: true, code: "F11" }], verified: V }),
   // ── formatting ──
   def({ id: "bold", category: "formatting", action: { type: "toggleFormat", prop: "bold" }, win: [{ ctrl: true, char: "b" }], mac: [{ meta: true, char: "b" }, { ctrl: true, char: "b" }], verified: V }),
   def({ id: "italic", category: "formatting", action: { type: "toggleFormat", prop: "italic" }, win: [{ ctrl: true, char: "i" }], mac: [{ meta: true, char: "i" }, { ctrl: true, char: "i" }], verified: V }),
@@ -87,7 +103,7 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   def({ id: "format-date", category: "formatting", action: { type: "numberFormat", format: "date" }, win: [{ ctrl: true, shift: true, code: "Digit3" }], mac: [{ ctrl: true, shift: true, code: "Digit3" }], verified: V, notes: "Ctrl+Shift+# on US layouts." }),
   def({ id: "format-general", category: "formatting", action: { type: "numberFormat", format: "general" }, win: [{ ctrl: true, shift: true, code: "Backquote" }], mac: [{ ctrl: true, shift: true, code: "Backquote" }], verified: V, notes: "Ctrl+Shift+~ on US layouts." }),
   // ── formulas ──
-  def({ id: "show-formulas", category: "formulas", action: { type: "toggleShowFormulas" }, win: [{ ctrl: true, code: "Backquote" }], mac: null, verified: { win: false, mac: false } }),
+  def({ id: "show-formulas", category: "formulas", action: { type: "toggleShowFormulas" }, win: [{ ctrl: true, code: "Backquote" }], mac: [{ ctrl: true, code: "Backquote" }], verified: V }),
   // ── ribbon keytips (Windows) ──
   def({ id: "autofit-column", category: "ribbon", action: { type: "autofitColumn" }, win: { keytip: ["H", "O", "I"] }, mac: null, verified: { win: false, mac: false }, notes: "Ribbon keytip; not on the MS shortcut page. Verify in Excel desktop." }),
   def({ id: "increase-decimal", category: "ribbon", action: { type: "decimals", delta: 1 }, win: { keytip: ["H", "0"] }, mac: null, verified: { win: false, mac: false }, notes: "Ribbon keytip; verify in Excel desktop." }),

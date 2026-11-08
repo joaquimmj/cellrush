@@ -46,7 +46,7 @@ describe("displayText", () => {
   it("percent with decimals", () => expect(displayText(c("0.1234", { numberFormat: "percent", decimals: 1 }))).toBe("12.3%"));
   it("date", () => expect(displayText(c(String(dateToSerial(2026, 1, 31)), { numberFormat: "date" }))).toBe("1/31/2026"));
   it("booleans", () => expect(displayText(c("true"))).toBe("TRUE"));
-  it("formula text shown until evaluated", () => expect(displayText(c("=A1"))).toBe("=A1"));
+  it("formula text shown with show-formulas on", () => expect(displayText(c("=A1"), true)).toBe("=A1"));
   it("serial round trip", () => expect(serialToDate(dateToSerial(2024, 2, 29))).toBe("2/29/2024"));
   it("Excel serial for 2026-01-01", () => expect(dateToSerial(2026, 1, 1)).toBe(46023));
   it("iso → typed date text", () => {

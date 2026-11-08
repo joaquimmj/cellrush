@@ -1,4 +1,5 @@
-export type ErrorCode = "#REF!" | "#DIV/0!" | "#NAME?" | "#VALUE!" | "#CIRC!";
+/** #ERROR! = the formula text cannot be parsed (Excel refuses such an entry; we store and flag it). */
+export type ErrorCode = "#REF!" | "#DIV/0!" | "#NAME?" | "#VALUE!" | "#CIRC!" | "#ERROR!";
 export interface ErrorValue {
   error: ErrorCode;
 }

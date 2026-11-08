@@ -55,6 +55,16 @@ function keytipStep(st: GridState, raw: RawKey, ctx: DispatchContext): DispatchR
 export function dispatchKey(st: GridState, raw: RawKey, ctx: DispatchContext): DispatchResult {
   const editing = st.mode !== "ready";
 
+  // An open dialog (Paste Special, Insert, Delete) owns the keyboard: letters pick, Enter confirms, Esc closes.
+  if (st.dialog) {
+    if (isModifierOnly(raw)) return { state: st, handled: false };
+    if (raw.code === "Escape") return { state: reduce(st, { type: "cancel" }), handled: true };
+    if (raw.code === "Enter" || raw.code === "NumpadEnter") return { state: reduce(st, { type: "dialogConfirm" }), handled: true };
+    const ch = charOf(raw, ctx.layout);
+    if (ch && !raw.ctrl && !raw.meta) return { state: reduce(st, { type: "dialogKey", key: ch }), handled: true };
+    return { state: st, handled: true };
+  }
+
   if (isModifierOnly(raw)) {
     const loneAlt = (raw.code === "AltLeft" || raw.code === "AltRight") && !raw.ctrl && !raw.meta && !raw.shift;
     if (ctx.platform === "win" && loneAlt && !editing) return { state: { ...st, keytip: [] }, handled: true };

@@ -12,11 +12,11 @@ const SAMPLE = [
   ["($k)", "FY23", "FY24", "FY25", "FY26"],
   ["Revenue", 1200, 1380, 1590, 1830],
   ["COGS", -480, -540, -610, -690],
-  ["Gross profit", 720, 840, 980, 1140],
+  ["Gross profit", "=B3+B4", "=C3+C4", "=D3+D4", "=E3+E4"],
   ["Opex", -390, -420, -455, -490],
-  ["EBITDA", 330, 420, 525, 650],
+  ["EBITDA", "=B5+B6", "=C5+C6", "=D5+D6", "=E5+E6"],
   [null],
-  ["Gross margin", 0.6, 0.609, 0.616, 0.623],
+  ["Gross margin", "=B5/B3", "=C5/C3", "=D5/D3", "=E5/E3"],
 ];
 
 const releaseFocus = () => {

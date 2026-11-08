@@ -1,7 +1,8 @@
+import { recalc } from "../formula/recalc";
 import { rangeOf, type CellAddr, type Range } from "./address";
 import type { Dir } from "./navigation";
 import { createSheet } from "./sheet";
-import type { CellFormat, NumberFormat, Sheet } from "./types";
+import type { Cell, CellFormat, NumberFormat, Sheet } from "./types";
 
 export type Mode = "ready" | "enter" | "edit";
 export type DateStyle = "mdy" | "dmy";
@@ -9,7 +10,29 @@ export type DateStyle = "mdy" | "dmy";
 export interface Editor {
   text: string;
   caret: number;
+  /**
+   * Point mode: while typing a formula, arrow keys pick a cell instead of committing.
+   * `start..end` is where the picked reference sits in `text`.
+   */
+  point?: { anchor: CellAddr; focus: CellAddr; start: number; end: number };
 }
+
+export interface Clipboard {
+  sheetIndex: number;
+  range: Range;
+  cut: boolean;
+  /** Snapshot keyed by "dr:dc" offset from the range's top-left. */
+  cells: Readonly<Record<string, Cell>>;
+}
+
+export type PasteMode = "all" | "values" | "formulas" | "formats";
+export type InsertChoice = "row" | "col";
+
+/** Small keyboard dialogs (Paste Special, Insert, Delete). */
+export type Dialog =
+  | { kind: "pasteSpecial"; choice: PasteMode }
+  | { kind: "insert"; choice: InsertChoice }
+  | { kind: "delete"; choice: InsertChoice };
 
 /** `anchor`..`focus` is the selected rectangle; `active` is the white cell inside it. */
 export interface Selection {
@@ -20,11 +43,14 @@ export interface Selection {
 
 /** One undoable step. Sheets are immutable, so storing both versions is cheap (structural sharing). */
 export interface Patch {
-  sheetIndex: number;
-  before: Sheet;
-  after: Sheet;
+  before: readonly Sheet[];
+  after: readonly Sheet[];
+  indexBefore: number;
+  indexAfter: number;
   selBefore: Selection;
   selAfter: Selection;
+  circularBefore: readonly string[];
+  circularAfter: readonly string[];
 }
 
 export interface EngineOptions {
@@ -49,6 +75,11 @@ export interface GridState {
   /** Ribbon keytip sequence typed so far (Alt → H → …); null when not in keytip mode. */
   keytip: readonly string[] | null;
   showFormulas: boolean;
+  /** Copied/cut range ("marching ants"), cleared by Esc or by editing a cell. */
+  clipboard: Clipboard | null;
+  dialog: Dialog | null;
+  /** Cells in a circular reference ("Sheet1!B3"); empty when there is none. */
+  circular: readonly string[];
   options: EngineOptions;
 }
 
@@ -84,7 +115,24 @@ export type Action =
   | { type: "numberFormat"; format: NumberFormat }
   | { type: "decimals"; delta: 1 | -1 }
   | { type: "autofitColumn" }
-  | { type: "toggleShowFormulas" };
+  | { type: "toggleShowFormulas" }
+  // ── M2 ──
+  | { type: "copy" }
+  | { type: "cut" }
+  | { type: "paste" }
+  | { type: "pasteSpecialDialog" }
+  | { type: "pasteSpecial"; mode: PasteMode }
+  | { type: "dialogKey"; key: string }
+  | { type: "dialogConfirm" }
+  | { type: "insertCells" }
+  | { type: "deleteCells" }
+  | { type: "insertEntire"; axis: InsertChoice }
+  | { type: "deleteEntire"; axis: InsertChoice }
+  | { type: "autoSum" }
+  | { type: "toggleAnchor" }
+  | { type: "nextSheet" }
+  | { type: "prevSheet" }
+  | { type: "insertSheet" };
 
 export type ActionType = Action["type"];
 
@@ -92,8 +140,12 @@ export const DEFAULT_OPTIONS: EngineOptions = { pageRows: 20, today: "2026-01-01
 
 export function createState(init: { sheets?: Sheet[]; active?: CellAddr; options?: Partial<EngineOptions> } = {}): GridState {
   const a = init.active ?? { r: 0, c: 0 };
+  const { sheets, circular } = recalc(init.sheets ?? [createSheet()]);
   return {
-    sheets: init.sheets ?? [createSheet()],
+    sheets,
+    clipboard: null,
+    dialog: null,
+    circular,
     sheetIndex: 0,
     sel: { active: a, anchor: a, focus: a },
     mode: "ready",
