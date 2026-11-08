@@ -1,0 +1,23 @@
+{
+  "name": "cellrush-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@cellrush/web",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "secrets:scan": "node scripts/scan-secrets.mjs --all",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "turbo": "2.3.3",
+    "typescript": "5.6.3",
+    "vitest": "2.1.8"
+  }
+}

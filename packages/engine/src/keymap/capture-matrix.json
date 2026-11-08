@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "note": "Filled empirically from the /keys page (Export JSON). One entry per browser + OS + mode. Do not add entries by hand without testing.",
+  "results": []
+}

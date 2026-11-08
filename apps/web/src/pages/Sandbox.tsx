@@ -1,0 +1,109 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  LAYOUT_NAMES, createSheet, createState, defaultPlatform, dispatchKey, fillFromRows, formatChord, guessLayout,
+  bindingFor, isKeytip, shortcutById, type GridState, type LayoutId, type Platform,
+} from "@cellrush/engine";
+import Grid from "../components/grid/Grid";
+import { currentEnv, toRaw } from "../lib/browser-env";
+
+// Synthetic sample data (made up for this demo).
+const SAMPLE = [
+  ["Northwind Labs", null, null, null, null],
+  ["($k)", "FY23", "FY24", "FY25", "FY26"],
+  ["Revenue", 1200, 1380, 1590, 1830],
+  ["COGS", -480, -540, -610, -690],
+  ["Gross profit", 720, 840, 980, 1140],
+  ["Opex", -390, -420, -455, -490],
+  ["EBITDA", 330, 420, 525, 650],
+  [null],
+  ["Gross margin", 0.6, 0.609, 0.616, 0.623],
+];
+
+const fresh = () =>
+  createState({
+    sheets: [fillFromRows(createSheet(), SAMPLE)],
+    active: { r: 2, c: 1 },
+    options: { today: new Date().toISOString().slice(0, 10) },
+  });
+
+export default function Sandbox() {
+  const env = useMemo(currentEnv, []);
+  const [platform, setPlatform] = useState<Platform>(() => defaultPlatform(env));
+  const [layout, setLayout] = useState<LayoutId>("us");
+  const [state, setState] = useState<GridState>(fresh);
+  const [last, setLast] = useState<string>("");
+  const [toast, setToast] = useState(false);
+  const samples = useRef<{ code: string; key: string }[]>([]);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).closest("select, button")) return;
+      const raw = toRaw(e);
+      if (raw.key.length === 1 && !raw.ctrl && !raw.meta && !raw.alt) {
+        samples.current = [...samples.current.slice(-20), { code: raw.code, key: raw.key }];
+        const g = guessLayout(samples.current);
+        if (g && g !== layout) setLayout(g);
+      }
+      const res = dispatchKey(stateRef.current, raw, { platform, layout });
+      if (res.handled) e.preventDefault();
+      if (res.state !== stateRef.current) setState(res.state);
+      if (res.shortcutId) {
+        const def = shortcutById(res.shortcutId)!;
+        const b = bindingFor(def, platform);
+        const label = isKeytip(b) ? `Alt, ${b.keytip.join(", ")}` : formatChord(b!.find(() => true)!, platform, layout);
+        setLast(`${label} · ${res.shortcutId}`);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [platform, layout]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(false), 1200);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  if (env.mobile) return <p className="py-20 text-center text-sub">This needs a physical keyboard. Open it on a computer.</p>;
+
+  const modeLabel = state.keytip !== null ? `Keytip: Alt${state.keytip.map((k) => `, ${k}`).join("")}…` : state.mode;
+
+  return (
+    <section className="space-y-3 pb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+        <h1 className="text-lg font-bold">Sandbox <span className="font-normal text-sub">— free practice, keyboard only</span></h1>
+        <div className="flex items-center gap-2">
+          <select className="rounded bg-panel px-2 py-1" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}>
+            <option value="win">Windows</option>
+            <option value="mac">macOS</option>
+          </select>
+          <select className="rounded bg-panel px-2 py-1" value={layout} onChange={(e) => setLayout(e.target.value as LayoutId)}>
+            {(Object.keys(LAYOUT_NAMES) as LayoutId[]).map((l) => (
+              <option key={l} value={l}>{LAYOUT_NAMES[l]}</option>
+            ))}
+          </select>
+          <button className="rounded border border-line px-2 py-1 hover:border-text" onClick={() => setState(fresh())}>
+            reset
+          </button>
+        </div>
+      </div>
+
+      <Grid state={state} onMouseAttempt={() => setToast(true)} />
+
+      <div className="flex justify-between text-xs text-sub">
+        <span>
+          mode: <span className="text-text">{modeLabel}</span>
+          {state.showFormulas && " · showing formulas"}
+        </span>
+        <span className="text-accent">{last}</span>
+      </div>
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded border border-line bg-panel px-3 py-1 text-sm">
+          keyboard only ⌨
+        </div>
+      )}
+    </section>
+  );
+}
