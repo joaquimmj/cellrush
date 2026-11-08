@@ -20,7 +20,8 @@
     "build:edge": "node scripts/build-edge.mjs",
     "db:functions": "node scripts/build-edge.mjs && supabase functions serve",
     "env:local": "node scripts/env-local.mjs",
-    "test:db": "pnpm build:edge && pnpm --filter @cellrush/server-tests test:db"
+    "test:db": "pnpm build:edge && pnpm --filter @cellrush/server-tests test:db",
+    "media": "node apps/web/scripts/media.mjs && node apps/web/scripts/social.mjs"
   },
   "devDependencies": {
     "esbuild": "0.24.0",

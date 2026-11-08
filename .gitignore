@@ -13,3 +13,4 @@ test-results/
 supabase/.temp/
 .gstack/
 supabase/functions/_shared/*.gen.js
+launch/

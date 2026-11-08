@@ -1,0 +1,22 @@
+name: Drill request
+description: Suggest a new drill or speedrun scenario.
+labels: ["drill"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What should the player do?
+      placeholder: "e.g. Freeze the top row so headers stay visible"
+    validations:
+      required: true
+  - type: textarea
+    id: keys
+    attributes:
+      label: Fastest key path (Windows and, if it exists, Mac)
+      description: Must be on Microsoft's "Keyboard shortcuts in Excel" page. Leave Mac empty rather than guessing.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters in real work

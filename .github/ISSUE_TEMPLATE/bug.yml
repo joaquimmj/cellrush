@@ -1,0 +1,37 @@
+name: Bug report
+description: Something doesn't work the way Excel (or the game) should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you pressed, what you expected, what you got.
+    validations:
+      required: true
+  - type: input
+    id: drill
+    attributes:
+      label: Drill / page
+      placeholder: "e.g. fill-down drill, /speedrun P&L, /daily"
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Shortcut set
+      options: [Windows, macOS]
+    validations:
+      required: true
+  - type: dropdown
+    id: layout
+    attributes:
+      label: Keyboard layout
+      options: [US QWERTY, UK QWERTY, French AZERTY, German QWERTZ, Other]
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: "e.g. Chrome 130 on Windows 11"
+    validations:
+      required: true

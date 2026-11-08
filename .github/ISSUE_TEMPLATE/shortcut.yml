@@ -1,0 +1,35 @@
+name: Shortcut correction
+description: A shortcut is wrong, missing, or doesn't match Excel.
+labels: ["shortcut"]
+body:
+  - type: input
+    id: action
+    attributes:
+      label: Action
+      placeholder: "e.g. Paste Special values"
+    validations:
+      required: true
+  - type: input
+    id: ours
+    attributes:
+      label: What cellrush expects
+    validations:
+      required: true
+  - type: input
+    id: excel
+    attributes:
+      label: What Excel does
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Windows, macOS, Both]
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Link to Microsoft's documentation (required for changes to the registry).

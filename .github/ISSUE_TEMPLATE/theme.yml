@@ -1,0 +1,16 @@
+name: Theme request
+description: Propose a colour theme (or better, open a PR, see docs/ADDING_A_THEME.md).
+labels: ["theme"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Theme name
+      description: Please no company, school or product names.
+    validations:
+      required: true
+  - type: textarea
+    id: colors
+    attributes:
+      label: Colours
+      description: bg, panel, line, sub, text, accent, warn, bad (#rrggbb). They must pass WCAG AA contrast.
