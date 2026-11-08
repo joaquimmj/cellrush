@@ -1,0 +1,15 @@
+{
+  "id": "terminal-green",
+  "label": "Terminal green",
+  "scheme": "dark",
+  "colors": {
+    "bg": "#050805",
+    "panel": "#0b130b",
+    "line": "#1a2e1a",
+    "sub": "#5fae5f",
+    "text": "#a6f5a6",
+    "accent": "#39ff14",
+    "warn": "#d6ff3f",
+    "bad": "#ff5f56"
+  }
+}

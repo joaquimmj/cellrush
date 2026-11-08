@@ -8,6 +8,7 @@ import GameBoard from "../components/GameBoard";
 import { currentEnv } from "../lib/browser-env";
 import { loadBoxes, loadPrefs, releaseFocus, saveBoxes } from "../lib/prefs";
 import { useRun } from "../lib/useRun";
+import { useT, type MessageKey } from "../i18n";
 
 /** Seconds of hesitation before the hint appears. */
 export const HINT_AFTER_MS = 4000;
@@ -15,6 +16,7 @@ const CATEGORIES: ShortcutCategory[] = ["navigation", "selection", "editing", "f
 const humanize = (id: string) => id.replace(/-/g, " ");
 
 export default function Learn() {
+  const t = useT();
   const env = useMemo(currentEnv, []);
   const [search] = useSearchParams();
   const prefs = useMemo(loadPrefs, []);
@@ -78,7 +80,7 @@ export default function Learn() {
     hinted.current = new Set();
   }, [makeRun]);
 
-  if (env.mobile) return <p className="py-20 text-center text-sub">Learn mode needs a physical keyboard.</p>;
+  if (env.mobile) return <p className="py-20 text-center text-sub">{t("learn.mobile")}</p>;
 
   const path = cur ? cur.task.optimal(cur.params)[platform] : null;
   const review = toReview(boxes);
@@ -89,40 +91,40 @@ export default function Learn() {
     <section className="grid gap-6 pb-8 lg:grid-cols-[1fr_220px]">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3 rounded bg-panel px-3 py-2 text-sm" onChange={releaseFocus}>
-          <span className="font-bold">Learn</span>
-          <span className="text-sub">no timer · hint after {HINT_AFTER_MS / 1000}s · missed shortcuts come back</span>
-          <select aria-label="category" className="ml-auto rounded bg-bg px-2 py-1" value={category} onChange={(e) => setCategory(e.target.value as ShortcutCategory | "all")}>
-            <option value="all">all drills</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          <span className="font-bold">{t("learn.title")}</span>
+          <span className="text-sub">{t("learn.sub", { s: HINT_AFTER_MS / 1000 })}</span>
+          <select aria-label={t("play.category")} className="ml-auto rounded bg-bg px-2 py-1" value={category} onChange={(e) => setCategory(e.target.value as ShortcutCategory | "all")}>
+            <option value="all">{t("play.allDrills")}</option>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{t(`cat.${c}` as MessageKey)}</option>)}
           </select>
-          <select aria-label="platform" className="rounded bg-bg px-2 py-1" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}>
-            <option value="win">Windows</option>
-            <option value="mac">macOS</option>
+          <select aria-label={t("play.platform")} className="rounded bg-bg px-2 py-1" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}>
+            <option value="win">{t("platform.win")}</option>
+            <option value="mac">{t("platform.mac")}</option>
           </select>
         </div>
         <GameBoard
           run={run}
           now={now}
           flash={flash}
-          label="learn"
+          label={t("learn.title")}
           below={
             <div className="min-h-9 text-sm" aria-live="polite">
               {showHint && path ? (
                 <p data-testid="hint" className="rounded border border-warn/50 bg-warn/10 px-3 py-1.5">
-                  <span className="text-warn">hint:</span>{" "}
+                  <span className="text-warn">{t("learn.hint")}</span>{" "}
                   {describePath(path, platform, layout).map((k, i) => (
                     <span key={i}>
-                      {i > 0 && <span className="text-sub"> then </span>}
+                      {i > 0 && <span className="text-sub"> {t("learn.then")} </span>}
                       <kbd className="font-bold">{k}</kbd>
                     </span>
                   ))}
                 </p>
               ) : last ? (
                 <p className={lastMissed ? "text-warn" : "text-accent"}>
-                  {lastMissed ? `“${humanize(last.taskId)}” will come back soon.` : `✓ ${humanize(last.taskId)}: clean.`}
+                  {lastMissed ? t("learn.comeBack", { drill: humanize(last.taskId) }) : t("learn.clean", { drill: humanize(last.taskId) })}
                 </p>
               ) : (
-                <p className="text-sub">Take your time. If you're stuck for {HINT_AFTER_MS / 1000} seconds, the keys appear here.</p>
+                <p className="text-sub">{t("learn.intro", { s: HINT_AFTER_MS / 1000 })}</p>
               )}
             </div>
           }
@@ -130,13 +132,13 @@ export default function Learn() {
       </div>
       <aside className="space-y-4 text-sm">
         <div className="rounded border border-line p-3">
-          <p className="text-xs text-sub">progress ({platform === "mac" ? "Mac" : "Windows"})</p>
-          <p data-testid="mastered"><b className="text-accent">{masteredCount(boxes)}</b> / {TASKS.length} drills mastered</p>
-          <p className="text-sub">{Object.keys(boxes).length} practised</p>
+          <p className="text-xs text-sub">{t("learn.progress", { platform: t(`platform.${platform}`) })}</p>
+          <p data-testid="mastered">{t("learn.mastered", { n: masteredCount(boxes), total: TASKS.length })}</p>
+          <p className="text-sub">{t("learn.practised", { n: Object.keys(boxes).length })}</p>
         </div>
         <div className="rounded border border-line p-3">
-          <p className="mb-1 text-xs text-sub">to review</p>
-          {review.length === 0 ? <p className="text-sub">nothing yet</p> : (
+          <p className="mb-1 text-xs text-sub">{t("learn.toReview")}</p>
+          {review.length === 0 ? <p className="text-sub">{t("learn.nothing")}</p> : (
             <ul className="space-y-0.5" data-testid="review">
               {review.slice(0, 12).map((id) => <li key={id}>{humanize(id)}</li>)}
             </ul>

@@ -11,8 +11,10 @@ import SubmitStatus from "../components/SubmitStatus";
 import { currentEnv } from "../lib/browser-env";
 import { dailyAttempt, loadPrefs, releaseFocus, saveDailyAttempt } from "../lib/prefs";
 import { useRun } from "../lib/useRun";
+import { useT } from "../i18n";
 
 function Countdown() {
+  const t = useT();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -24,12 +26,13 @@ function Countdown() {
   const ss = String(Math.floor((ms % 60_000) / 1000)).padStart(2, "0");
   return (
     <p className="text-sm text-sub">
-      next daily in <span className="text-text tabular-nums">{hh}:{mm}:{ss}</span>
+      {t("daily.next")} <span className="text-text tabular-nums">{hh}:{mm}:{ss}</span>
     </p>
   );
 }
 
 export default function Daily() {
+  const t = useT();
   const env = useMemo(currentEnv, []);
   const [search] = useSearchParams();
   const prefs = useMemo(loadPrefs, []);
@@ -66,9 +69,9 @@ export default function Daily() {
   const header = (
     <div className="flex flex-wrap items-baseline justify-between gap-2">
       <h1 className="text-2xl font-bold">
-        Daily <span className="text-accent">#{number}</span>
+        {t("daily.title")} <span className="text-accent">#{number}</span>
         <span className="ml-3 text-sm font-normal text-sub">
-          {date} · {DAILY_TASKS} drills · same for everyone on {platform === "mac" ? "Mac" : "Windows"}
+          {t("daily.meta", { date, n: DAILY_TASKS, platform: t(`platform.${platform}`) })}
         </span>
       </h1>
       <Countdown />
@@ -79,10 +82,10 @@ export default function Daily() {
     return (
       <section className="space-y-6 pb-8">
         {header}
-        <p className="text-sm text-sub">You already played today's daily. Your ranked result:</p>
+        <p className="text-sm text-sub">{t("daily.already")}</p>
         <ShareBox summary={ranked} />
         <button className="rounded border border-line px-3 py-1 text-sm hover:border-text" onClick={playAgain}>
-          practise it again (not ranked)
+          {t("daily.practiseAgain")}
         </button>
       </section>
     );
@@ -91,7 +94,7 @@ export default function Daily() {
   return (
     <section className="space-y-4 pb-8">
       {header}
-      {practice && <p className="text-xs text-warn">practice run, not ranked</p>}
+      {practice && <p className="text-xs text-warn">{t("daily.practiceBanner")}</p>}
       {run.finishedAt !== null && summary ? (
         <Results
           run={run}
@@ -103,17 +106,17 @@ export default function Daily() {
             <div className="space-y-3 text-center text-sm">
               {practice && ranked && (
                 <p className="text-sub">
-                  Your ranked result today is still <b className="text-text">{ranked.score}</b>.
+                  {t("daily.stillRanked")} <b className="text-text">{ranked.score}</b>.
                 </p>
               )}
               <button className="rounded border border-line px-3 py-1 hover:border-text" onClick={playAgain}>
-                practise again (not ranked)
+                {t("daily.practiseAgainShort")}
               </button>
             </div>
           }
         />
       ) : (
-        <GameBoard run={run} now={now} flash={flash} label={`daily #${number}`} />
+        <GameBoard run={run} now={now} flash={flash} label={t("daily.label", { n: number })} />
       )}
     </section>
   );

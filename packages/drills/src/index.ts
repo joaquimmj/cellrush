@@ -8,3 +8,4 @@ export * from "./share";
 export * from "./validate";
 export * from "./scenarios";
 export * from "./learn";
+export * from "./i18n";

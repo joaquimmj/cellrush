@@ -28,5 +28,8 @@ Rules:
    (`packages/engine/src/keymap/registry.ts`). Avoid browser-reserved keys (Cmd+W/T/N/R/D…).
 4. **Mac paths are never invented.** If Microsoft lists no Mac shortcut, set `mac: null`.
 
+5. **Both languages.** Add the French prompt to `FR_PROMPTS` in `packages/drills/src/i18n.ts`
+   (same cell references as the English one); the i18n test fails without it.
+
 Then run `pnpm --filter @cellrush/drills test`: the bot plays your optimal path on both
 platforms and four layouts and fails if it doesn't solve the drill exactly on its last key.

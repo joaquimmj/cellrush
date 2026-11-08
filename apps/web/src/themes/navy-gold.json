@@ -1,0 +1,15 @@
+{
+  "id": "navy-gold",
+  "label": "Navy & gold",
+  "scheme": "dark",
+  "colors": {
+    "bg": "#0f1b33",
+    "panel": "#16264a",
+    "line": "#2a3d6b",
+    "sub": "#a9b6d3",
+    "text": "#eef2fb",
+    "accent": "#d4af37",
+    "warn": "#f2c94c",
+    "bad": "#ff8a80"
+  }
+}

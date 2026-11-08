@@ -4,20 +4,21 @@ import type { Platform } from "@cellrush/engine";
 import { dailyNumber, squaresOf, utcDate } from "@cellrush/drills";
 import { supabase } from "../lib/supabase";
 import { COUNTRIES } from "./Profile";
+import { useT, type MessageKey } from "../i18n";
 
 type Tab = "daily" | "30s" | "60s" | "120s" | "25t" | "50t" | "schools" | "countries" | "sc-pnl-banking" | "sc-revenue-projection" | "sc-clean-data";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "daily", label: "today's daily" },
-  { id: "30s", label: "30s" },
-  { id: "60s", label: "60s" },
-  { id: "120s", label: "120s" },
-  { id: "25t", label: "25 tasks" },
-  { id: "50t", label: "50 tasks" },
-  { id: "schools", label: "schools" },
-  { id: "countries", label: "countries" },
-  { id: "sc-pnl-banking", label: "P&L speedrun" },
-  { id: "sc-revenue-projection", label: "projection speedrun" },
-  { id: "sc-clean-data", label: "cleanup speedrun" },
+const TABS: { id: Tab; key: MessageKey }[] = [
+  { id: "daily", key: "lb.daily" },
+  { id: "30s", key: "mode.30s" },
+  { id: "60s", key: "mode.60s" },
+  { id: "120s", key: "mode.120s" },
+  { id: "25t", key: "mode.25t" },
+  { id: "50t", key: "mode.50t" },
+  { id: "schools", key: "lb.schools" },
+  { id: "countries", key: "lb.countries" },
+  { id: "sc-pnl-banking", key: "lb.sc.pnl-banking" },
+  { id: "sc-revenue-projection", key: "lb.sc.revenue-projection" },
+  { id: "sc-clean-data", key: "lb.sc.clean-data" },
 ];
 const isScenario = (t: Tab) => t.startsWith("sc-");
 const fmtTime = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}.${Math.floor((ms % 1000) / 100)}`;
@@ -26,6 +27,7 @@ const countryName = (c: string | null) => (c ? COUNTRIES.find(([k]) => k === c)?
 type Row = Record<string, string | number | null>;
 
 export default function Leaderboard() {
+  const t = useT();
   const [search] = useSearchParams();
   const [tab, setTab] = useState<Tab>(() => (search.get("tab") === "scenarios" ? "sc-pnl-banking" : "daily"));
   const [platform, setPlatform] = useState<Platform>("win");
@@ -50,39 +52,40 @@ export default function Leaderboard() {
     });
   }, [tab, platform, groupMode, today]);
 
-  if (!supabase) return <p className="py-20 text-center text-sub">Leaderboards are not set up on this server.</p>;
+  if (!supabase) return <p className="py-20 text-center text-sub">{t("lb.off")}</p>;
   const groups = tab === "schools" || tab === "countries";
   const btn = (on: boolean) => `rounded px-2 py-1 ${on ? "text-accent" : "text-sub hover:text-text"}`;
 
   return (
     <section className="space-y-4 pb-10">
-      <h1 className="text-2xl font-bold">Leaderboards</h1>
+      <h1 className="text-2xl font-bold">{t("lb.title")}</h1>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded bg-panel px-3 py-2 text-sm">
-        <div className="flex flex-wrap">{TABS.map((t) => <button key={t.id} className={btn(tab === t.id)} onClick={() => setTab(t.id)}>{t.label}</button>)}</div>
+        <div className="flex flex-wrap">{TABS.map((x) => <button key={x.id} aria-pressed={tab === x.id} className={btn(tab === x.id)} onClick={() => setTab(x.id)}>{t(x.key)}</button>)}</div>
         <div className="flex">
-          <button className={btn(platform === "win")} onClick={() => setPlatform("win")}>Windows</button>
-          <button className={btn(platform === "mac")} onClick={() => setPlatform("mac")}>macOS</button>
+          <button aria-pressed={platform === "win"} className={btn(platform === "win")} onClick={() => setPlatform("win")}>{t("platform.win")}</button>
+          <button aria-pressed={platform === "mac"} className={btn(platform === "mac")} onClick={() => setPlatform("mac")}>{t("platform.mac")}</button>
         </div>
         {groups && (
-          <select aria-label="mode" className="rounded bg-bg px-2 py-1" value={groupMode} onChange={(e) => setGroupMode(e.target.value as typeof groupMode)}>
+          <select aria-label={t("lb.mode")} className="rounded bg-bg px-2 py-1" value={groupMode} onChange={(e) => setGroupMode(e.target.value as typeof groupMode)}>
             <option value="30s">30s</option><option value="60s">60s</option><option value="120s">120s</option>
           </select>
         )}
       </div>
       <p className="text-xs text-sub">
-        {isScenario(tab) ? "Fastest completed run per player. " : tab === "daily" ? `Daily #${dailyNumber(today)}, first attempts only. ` : groups ? "Average of each member's best run; 3 players minimum. " : "Best run per player. "}
-        Every score was replayed and checked on the server.
+        {isScenario(tab) ? t("lb.noteScenario") : tab === "daily" ? t("lb.noteDaily", { n: dailyNumber(today) }) : groups ? t("lb.noteGroups") : t("lb.noteBest")}{" "}
+        {t("lb.verified")}
       </p>
       {error && <p className="text-bad">{error}</p>}
-      {rows === null && !error && <p className="text-sub">loading…</p>}
-      {rows?.length === 0 && <p className="text-sub">No ranked runs yet. Be the first.</p>}
+      {rows === null && !error && <p className="text-sub">{t("lb.loading")}</p>}
+      {rows?.length === 0 && <p className="text-sub">{t("lb.empty")}</p>}
       {rows && rows.length > 0 && (
-        <table className="w-full text-sm" data-testid="leaderboard">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[32rem] text-sm" data-testid="leaderboard">
           <thead className="text-left text-xs text-sub">
             <tr>
               <th className="py-1 pr-2">#</th>
-              {groups ? <><th>{tab === "schools" ? "school" : "country"}</th><th>players</th><th className="text-right">avg</th><th className="text-right">best</th></>
-                : <><th>player</th><th>school</th><th>country</th><th className="text-right">{isScenario(tab) ? "time" : "score"}</th><th className="text-right">efficiency</th>{tab === "daily" && <th className="pl-3">run</th>}</>}
+              {groups ? <><th>{tab === "schools" ? t("lb.school") : t("lb.country")}</th><th>{t("lb.players")}</th><th className="text-right">{t("lb.avg")}</th><th className="text-right">{t("lb.best")}</th></>
+                : <><th>{t("lb.player")}</th><th>{t("lb.school")}</th><th>{t("lb.country")}</th><th className="text-right">{isScenario(tab) ? t("lb.time") : t("lb.score")}</th><th className="text-right">{t("lb.efficiency")}</th>{tab === "daily" && <th className="pl-3">{t("lb.run")}</th>}</>}
             </tr>
           </thead>
           <tbody>
@@ -110,6 +113,7 @@ export default function Leaderboard() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   );

@@ -4,8 +4,8 @@
   --color-bg: #16181d;
   --color-panel: #1e2128;
   --color-line: #2c313b;
-  --color-sub: #6b7280;
-  --color-text: #c9ccd3;
+  --color-sub: #9198a4;
+  --color-text: #d4d7dd;
   --color-accent: #4ade80;
   --color-warn: #fbbf24;
   --color-bad: #f87171;
@@ -27,3 +27,9 @@ body {
   from { box-shadow: 0 0 0 3px var(--color-accent); }
   to { box-shadow: 0 0 0 0 transparent; }
 }
+
+/* Settings → animations off (also honoured automatically via prefers-reduced-motion above). */
+html.no-anim *, html.no-anim *::before, html.no-anim *::after { animation: none !important; transition: none !important; }
+
+/* Visible keyboard focus for controls (the grid itself is not focusable). */
+:where(a, button, select, input, textarea):focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }

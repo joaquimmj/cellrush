@@ -8,13 +8,14 @@ import SubmitStatus from "../components/SubmitStatus";
 import { currentEnv } from "../lib/browser-env";
 import { loadPrefs, modeKey, personalBest, recordScore, releaseFocus, savePrefs } from "../lib/prefs";
 import { useRun } from "../lib/useRun";
+import { useT, type MessageKey } from "../i18n";
 
-const MODES: { label: string; mode: RunMode }[] = [
-  { label: "30s", mode: { kind: "time", seconds: 30 } },
-  { label: "60s", mode: { kind: "time", seconds: 60 } },
-  { label: "120s", mode: { kind: "time", seconds: 120 } },
-  { label: "25 tasks", mode: { kind: "tasks", count: 25 } },
-  { label: "50 tasks", mode: { kind: "tasks", count: 50 } },
+const MODES: { label: string; key: MessageKey; mode: RunMode }[] = [
+  { label: "30s", key: "mode.30s", mode: { kind: "time", seconds: 30 } },
+  { label: "60s", key: "mode.60s", mode: { kind: "time", seconds: 60 } },
+  { label: "120s", key: "mode.120s", mode: { kind: "time", seconds: 120 } },
+  { label: "25 tasks", key: "mode.25t", mode: { kind: "tasks", count: 25 } },
+  { label: "50 tasks", key: "mode.50t", mode: { kind: "tasks", count: 50 } },
 ];
 const CATEGORIES: ShortcutCategory[] = ["navigation", "selection", "editing", "formatting", "rows-cols", "clipboard", "formulas", "sheets", "ribbon"];
 
@@ -102,6 +103,7 @@ interface SettingsProps {
 }
 
 function Settings(p: SettingsProps) {
+  const t = useT();
   const btn = (active: boolean) => `px-2 py-1 rounded ${active ? "text-accent" : "text-sub hover:text-text"}`;
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded bg-panel px-3 py-2 text-sm" onChange={releaseFocus}>
@@ -115,21 +117,21 @@ function Settings(p: SettingsProps) {
               releaseFocus();
             }}
           >
-            {m.label}
+            {t(m.key)}
           </button>
         ))}
       </div>
-      <select aria-label="category" className="rounded bg-bg px-2 py-1" value={p.category} onChange={(e) => p.setCategory(e.target.value as ShortcutCategory | "all")}>
-        <option value="all">all drills</option>
+      <select aria-label={t("play.category")} className="rounded bg-bg px-2 py-1" value={p.category} onChange={(e) => p.setCategory(e.target.value as ShortcutCategory | "all")}>
+        <option value="all">{t("play.allDrills")}</option>
         {CATEGORIES.map((c) => (
-          <option key={c} value={c}>{c}</option>
+          <option key={c} value={c}>{t(`cat.${c}` as MessageKey)}</option>
         ))}
       </select>
-      <select aria-label="platform" className="rounded bg-bg px-2 py-1" value={p.platform} onChange={(e) => p.setPlatform(e.target.value as Platform)}>
-        <option value="win">Windows</option>
-        <option value="mac">macOS</option>
+      <select aria-label={t("play.platform")} className="rounded bg-bg px-2 py-1" value={p.platform} onChange={(e) => p.setPlatform(e.target.value as Platform)}>
+        <option value="win">{t("platform.win")}</option>
+        <option value="mac">{t("platform.mac")}</option>
       </select>
-      <select aria-label="keyboard layout" className="rounded bg-bg px-2 py-1" value={p.layout} onChange={(e) => p.setLayout(e.target.value as LayoutId)}>
+      <select aria-label={t("play.layout")} className="rounded bg-bg px-2 py-1" value={p.layout} onChange={(e) => p.setLayout(e.target.value as LayoutId)}>
         {(Object.keys(LAYOUT_NAMES) as LayoutId[]).map((l) => (
           <option key={l} value={l}>{LAYOUT_NAMES[l]}</option>
         ))}
@@ -141,7 +143,7 @@ function Settings(p: SettingsProps) {
           releaseFocus();
         }}
       >
-        ↻ restart
+        {t("play.restart")}
       </button>
     </div>
   );

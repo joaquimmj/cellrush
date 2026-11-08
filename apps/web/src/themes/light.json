@@ -1,0 +1,15 @@
+{
+  "id": "light",
+  "label": "Light",
+  "scheme": "light",
+  "colors": {
+    "bg": "#f7f7f5",
+    "panel": "#ecebe7",
+    "line": "#d4d2cc",
+    "sub": "#5f5d58",
+    "text": "#1f1e1c",
+    "accent": "#15803d",
+    "warn": "#a16207",
+    "bad": "#b91c1c"
+  }
+}

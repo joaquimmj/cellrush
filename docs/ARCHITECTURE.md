@@ -58,3 +58,11 @@ checklist; conditions needing a Windows-only shortcut (font colour, autofit) are
 Mac. `learn.ts`: hints (`describePath`) and Leitner-box spaced repetition. Engine: borders
 (Ctrl+Shift+& / _), font and fill colour (Alt, H, F, C / Alt, H, H with a simplified palette).
 Pages `/speedrun` (live checklist, per-scenario leaderboards by time) and `/learn`.
+
+**M7**: 8 JSON themes (`apps/web/src/themes`, contrast-tested), `/settings` (theme, language,
+shortcuts, layout, key sounds, animations), EN/FR UI (`apps/web/src/i18n`, typed: a missing
+French key does not compile) and French drill prompts (`packages/drills/src/i18n.ts`). Phones
+get a "needs a keyboard" screen on game pages; leaderboards stay usable. Grid rows take
+primitive props so a keystroke re-renders only the rows it touches (measured in E2E:
+keydown → DOM updated p95 ≈ 7 ms). Every page except the game is lazy-loaded. Lighthouse
+(local production build): performance 98–99, accessibility / best practices / SEO 100.

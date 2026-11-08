@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { scoreRun, timeLimitMs, type RunState } from "@cellrush/drills";
+import { promptText, scoreRun, timeLimitMs, type RunState } from "@cellrush/drills";
+import { useT } from "../i18n";
+import { useSettings } from "../lib/settings";
 import { releaseFocus } from "../lib/prefs";
 import Grid from "./grid/Grid";
 
@@ -17,6 +19,8 @@ interface Props {
 
 /** Prompt, clock and grid for a run in progress. */
 export default function GameBoard({ run, now, flash, label, promptExtra, below }: Props) {
+  const t = useT();
+  const { settings } = useSettings();
   const [toast, setToast] = useState(false);
   useEffect(() => {
     if (!toast) return;
@@ -42,17 +46,17 @@ export default function GameBoard({ run, now, flash, label, promptExtra, below }
         <div className="min-h-16">
           <p className="text-xs tracking-wide text-sub uppercase">
             {label ? `${label} · ` : ""}
-            {cur?.task.category}
+            {cur ? t(`cat.${cur.task.category}` as never) : ""}
           </p>
           <p className="text-xl font-bold sm:text-2xl" aria-live="polite" data-testid="prompt">
-            {cur ? cur.task.prompt(cur.params) : "No drills match these filters."}
+            {cur ? promptText(cur.task, cur.params, settings.lang) : t("board.noDrills")}
           </p>
           {promptExtra}
         </div>
         <div className="text-right font-bold text-accent">
           <div className="text-3xl tabular-nums" data-testid="clock">{clock}</div>
           <div className="text-xs font-normal text-sub">
-            {!started ? "starts on your first key" : mode.kind === "scenario" ? "time left" : mode.kind === "learn" ? "drills done" : `${live.tpm.toFixed(1)} tasks/min`}
+            {!started ? t("board.startsOnKey") : mode.kind === "scenario" ? t("board.timeLeft") : mode.kind === "learn" ? t("board.drillsDone") : t("board.tpm", { n: live.tpm.toFixed(1) })}
           </div>
         </div>
       </div>
@@ -69,10 +73,10 @@ export default function GameBoard({ run, now, flash, label, promptExtra, below }
         </div>
       )}
       <p className="text-center text-xs text-sub">
-        keyboard only · Shift+Esc skips a drill · {run.config.platform === "mac" ? "macOS" : "Windows"} shortcuts
+        {t("board.footer", { platform: t(`platform.${run.config.platform}`) })}
       </p>
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded border border-line bg-panel px-3 py-1 text-sm">keyboard only ⌨</div>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded border border-line bg-panel px-3 py-1 text-sm">{t("board.mouseToast")}</div>
       )}
     </>
   );

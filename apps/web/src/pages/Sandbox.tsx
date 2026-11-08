@@ -6,6 +6,7 @@ import {
 import Grid from "../components/grid/Grid";
 import { currentEnv, toRaw } from "../lib/browser-env";
 import { releaseFocus } from "../lib/prefs";
+import { useT } from "../i18n";
 
 // Synthetic sample data (made up for this demo).
 const SAMPLE = [
@@ -28,6 +29,7 @@ const fresh = () =>
   });
 
 export default function Sandbox() {
+  const t = useT();
   const env = useMemo(currentEnv, []);
   const [platform, setPlatform] = useState<Platform>(() => defaultPlatform(env));
   const [layout, setLayout] = useState<LayoutId>("us");
@@ -74,14 +76,14 @@ export default function Sandbox() {
   return (
     <section className="space-y-3 pb-8">
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-        <h1 className="text-lg font-bold">Sandbox <span className="font-normal text-sub">— free practice, keyboard only</span></h1>
+        <h1 className="text-lg font-bold">{t("sandbox.title")} <span className="font-normal text-sub">— {t("sandbox.sub")}</span></h1>
         {/* After a control is used, hand the keyboard back to the grid (the key handler ignores focused controls). */}
         <div className="flex items-center gap-2" onChange={releaseFocus}>
-          <select className="rounded bg-panel px-2 py-1" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}>
+          <select aria-label={t("play.platform")} className="rounded bg-panel px-2 py-1" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}>
             <option value="win">Windows</option>
             <option value="mac">macOS</option>
           </select>
-          <select className="rounded bg-panel px-2 py-1" value={layout} onChange={(e) => setLayout(e.target.value as LayoutId)}>
+          <select aria-label={t("play.layout")} className="rounded bg-panel px-2 py-1" value={layout} onChange={(e) => setLayout(e.target.value as LayoutId)}>
             {(Object.keys(LAYOUT_NAMES) as LayoutId[]).map((l) => (
               <option key={l} value={l}>{LAYOUT_NAMES[l]}</option>
             ))}
@@ -91,7 +93,7 @@ export default function Sandbox() {
               releaseFocus();
             }}
           >
-            reset
+            {t("sandbox.reset")}
           </button>
         </div>
       </div>
@@ -107,7 +109,7 @@ export default function Sandbox() {
 
       <div className="flex justify-between text-xs text-sub">
         <span>
-          mode: <span className="text-text">{modeLabel}</span>
+          {t("sandbox.mode")}: <span className="text-text">{modeLabel}</span>
           {state.showFormulas && " · showing formulas"}
         </span>
         <span className="text-accent">{last}</span>

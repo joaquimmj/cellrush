@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { guessLayout, type LayoutId, type RawKey } from "@cellrush/engine";
 import { runKey, strokeToRaws, tick, type RunState } from "@cellrush/drills";
 import { toRaw } from "./browser-env";
+import { click, useSettings } from "./settings";
 
 declare global {
   interface Window {
     /** Dev/E2E hook: read-only view of the run, used by the Playwright bot. Not in production builds. */
     __cellrush?: { run: () => RunState; optimalKeys: () => RawKey[] | null };
+    /** Dev/E2E only: ms from each keydown that changed the run to the DOM being updated. */
+    __cellrushPerf?: number[];
   }
 }
 
@@ -34,6 +37,19 @@ export function useRun({ makeRun, layout, setLayout, restartOnEnter = true }: Op
   const [now, setNow] = useState(() => performance.now());
   const [flash, setFlash] = useState(0);
   const samples = useRef<{ code: string; key: string }[]>([]);
+  const { settings } = useSettings();
+  const soundRef = useRef(settings.sound);
+  soundRef.current = settings.sound;
+  const measure = import.meta.env.DEV || !!import.meta.env.VITE_E2E;
+  const keyAt = useRef<number | null>(null);
+
+  // Latency probe (dev/E2E): keydown → engine → React render → DOM updated (layout effect).
+  // Waiting for the next frame would add 0–16.7 ms of vsync alignment that is not our work.
+  useLayoutEffect(() => {
+    if (!measure || keyAt.current === null) return;
+    (window.__cellrushPerf ??= []).push(performance.now() - keyAt.current);
+    keyAt.current = null;
+  }, [run, measure]);
 
   const restart = useCallback(() => setRun(makeRun()), [makeRun]);
 
@@ -68,7 +84,10 @@ export function useRun({ makeRun, layout, setLayout, restartOnEnter = true }: Op
         const g = guessLayout(samples.current);
         if (g && g !== layout) setLayout(g);
       }
-      const out = runKey(cur, raw, performance.now());
+      const t0 = performance.now();
+      const out = runKey(cur, raw, t0);
+      if (measure && out.run !== cur) keyAt.current = t0;
+      if (soundRef.current && out.handled) click(!!out.completed);
       // During a run every key belongs to the game, except browser keys it doesn't use (F12, F5…).
       if (out.handled || (raw.key.length === 1 && !raw.ctrl && !raw.meta)) e.preventDefault();
       if (out.completed) setFlash((f) => f + 1);

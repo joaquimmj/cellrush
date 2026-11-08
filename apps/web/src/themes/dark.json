@@ -1,0 +1,15 @@
+{
+  "id": "dark",
+  "label": "Dark",
+  "scheme": "dark",
+  "colors": {
+    "bg": "#16181d",
+    "panel": "#1e2128",
+    "line": "#2c313b",
+    "sub": "#9198a4",
+    "text": "#d4d7dd",
+    "accent": "#4ade80",
+    "warn": "#fbbf24",
+    "bad": "#f87171"
+  }
+}

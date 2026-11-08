@@ -1,0 +1,15 @@
+{
+  "id": "paper",
+  "label": "Paper",
+  "scheme": "light",
+  "colors": {
+    "bg": "#f4ecd8",
+    "panel": "#ebe1c8",
+    "line": "#cfc2a3",
+    "sub": "#6b5d43",
+    "text": "#2b2418",
+    "accent": "#8a4b0f",
+    "warn": "#715700",
+    "bad": "#a3261b"
+  }
+}

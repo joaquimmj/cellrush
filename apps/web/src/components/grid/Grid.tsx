@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from "react";
 import {
-  DEFAULT_COL_WIDTH, PALETTE, colToLetters, displayText, getCell, inRange, rangeOf, selRange, toA1,
-  type Dialog, type GridState, type Range, type Sheet,
+  DEFAULT_COL_WIDTH, PALETTE, colToLetters, displayText, getCell, rangeOf, selRange, toA1,
+  type Dialog, type GridState, type Sheet,
 } from "@cellrush/engine";
 
 const ROW_H = 24;
@@ -20,6 +20,10 @@ export default function Grid({ state, onMouseAttempt }: Props) {
   const editing = state.mode !== "ready";
   const activeCell = getCell(sheet, active);
   const barText = editing ? state.editor!.text : (activeCell?.raw ?? "");
+  const multi = R.r1 !== R.r2 || R.c1 !== R.c2;
+  const pt = state.editor?.point;
+  const point = pt ? rangeOf(pt.anchor, pt.focus) : null;
+  const clip = state.clipboard && state.clipboard.sheetIndex === state.sheetIndex ? state.clipboard.range : null;
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -62,18 +66,35 @@ export default function Grid({ state, onMouseAttempt }: Props) {
             </tr>
           </thead>
           <tbody>
-            {Array.from({ length: sheet.rows }, (_, r) =>
-              sheet.hiddenRows.includes(r) ? null : (
+            {Array.from({ length: sheet.rows }, (_, r) => {
+              if (sheet.hiddenRows.includes(r)) return null;
+              const inSel = multi && r >= R.r1 && r <= R.r2;
+              const inPoint = point && r >= point.r1 && r <= point.r2;
+              const inClip = clip && r >= clip.r1 && r <= clip.r2;
+              const isActiveRow = r === active.r;
+              return (
                 <Row
                   key={r}
                   r={r}
                   sheet={sheet}
-                  state={state}
                   inRowRange={r >= R.r1 && r <= R.r2}
-                  activeRef={r === active.r ? activeRef : undefined}
+                  selC1={inSel ? R.c1 : -1}
+                  selC2={inSel ? R.c2 : -1}
+                  activeC={isActiveRow ? active.c : -1}
+                  editorText={isActiveRow && state.editor ? state.editor.text : null}
+                  caret={isActiveRow && state.editor ? state.editor.caret : 0}
+                  pointC1={inPoint ? point.c1 : -1}
+                  pointC2={inPoint ? point.c2 : -1}
+                  clipC1={inClip ? clip.c1 : -1}
+                  clipC2={inClip ? clip.c2 : -1}
+                  clipTop={!!inClip && r === clip.r1}
+                  clipBottom={!!inClip && r === clip.r2}
+                  showFormulas={state.showFormulas}
+                  dateStyle={state.options.dateStyle}
+                  activeRef={isActiveRow ? activeRef : undefined}
                 />
-              ),
-            )}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -130,32 +151,55 @@ function DialogBox({ dialog }: { dialog: Dialog }) {
   );
 }
 
-const Row = memo(function Row({
-  r, sheet, state, inRowRange, activeRef,
-}: { r: number; sheet: Sheet; state: GridState; inRowRange: boolean; activeRef?: React.RefObject<HTMLTableCellElement> }) {
-  const R = selRange(state.sel);
-  const { active } = state.sel;
-  const multi = R.r1 !== R.r2 || R.c1 !== R.c2;
-  const p = state.editor?.point;
-  const point = p ? rangeOf(p.anchor, p.focus) : null;
-  const clip = state.clipboard && state.clipboard.sheetIndex === state.sheetIndex ? state.clipboard.range : null;
+interface RowProps {
+  r: number;
+  sheet: Sheet;
+  inRowRange: boolean;
+  /** Columns of a multi-cell selection on this row, or -1. */
+  selC1: number;
+  selC2: number;
+  /** Active cell's column if it is on this row, or -1. */
+  activeC: number;
+  /** Editor text/caret when the active cell on this row is being edited. */
+  editorText: string | null;
+  caret: number;
+  pointC1: number;
+  pointC2: number;
+  clipC1: number;
+  clipC2: number;
+  clipTop: boolean;
+  clipBottom: boolean;
+  showFormulas: boolean;
+  dateStyle: "mdy" | "dmy";
+  activeRef?: React.RefObject<HTMLTableCellElement>;
+}
+
+/**
+ * One grid row. Props are primitives on purpose: React.memo then skips every row a keystroke
+ * did not touch (moving the cursor re-renders 1–2 rows, not 60).
+ */
+const Row = memo(function Row(p: RowProps) {
+  const { r, sheet } = p;
   return (
     <tr style={{ height: ROW_H }}>
-      <th className={`sticky left-0 z-10 border border-line font-normal ${inRowRange ? "bg-line text-text" : "bg-panel text-sub"}`}>{r + 1}</th>
+      <th scope="row" className={`sticky left-0 z-10 border border-line font-normal ${p.inRowRange ? "bg-line text-text" : "bg-panel text-sub"}`}>{r + 1}</th>
       {Array.from({ length: sheet.cols }, (_, c) => {
         const cell = getCell(sheet, { r, c });
-        const isActive = active.r === r && active.c === c;
-        const selected = multi && inRange(R, { r, c }) && !isActive;
+        const isActive = p.activeC === c;
+        const editing = isActive && p.editorText !== null;
+        const selected = c >= p.selC1 && c <= p.selC2 && p.selC1 >= 0 && !isActive;
         const f = cell?.format;
-        const text = isActive && state.editor ? state.editor.text : displayText(cell, state.showFormulas, state.options.dateStyle);
-        const numeric = typeof cell?.value === "number" && !(isActive && state.editor);
+        const text = editing ? p.editorText! : displayText(cell, p.showFormulas, p.dateStyle);
+        const numeric = typeof cell?.value === "number" && !editing;
         const isErr = typeof cell?.value === "object" && cell?.value !== null;
-        const pointed = point && inRange(point, { r, c });
-        const ants = clip && inRange(clip, { r, c }) ? antsStyle(clip, r, c) : undefined;
+        const pointed = p.pointC1 >= 0 && c >= p.pointC1 && c <= p.pointC2;
+        const inClip = p.clipC1 >= 0 && c >= p.clipC1 && c <= p.clipC2;
+        const ants = inClip ? antsStyle(p.clipTop, p.clipBottom, c === p.clipC1, c === p.clipC2) : undefined;
         return (
           <td
             key={c}
-            ref={isActive ? activeRef : undefined}
+            ref={isActive ? p.activeRef : undefined}
+            aria-selected={isActive || selected || undefined}
             className={[
               "relative overflow-hidden border border-line/60 px-1 whitespace-nowrap",
               selected ? "bg-accent/15" : "",
@@ -169,7 +213,7 @@ const Row = memo(function Row({
             ].join(" ")}
             style={{ color: f?.fontColor, background: f?.fillColor, ...bordersStyle(f?.borders), ...ants }}
           >
-            {isActive && state.editor ? <EditorText text={text} caret={state.editor.caret} /> : text}
+            {editing ? <EditorText text={text} caret={p.caret} /> : text}
           </td>
         );
       })}
@@ -211,14 +255,9 @@ function PaletteBox({ dialog }: { dialog: Extract<Dialog, { kind: "color" }> }) 
 }
 
 /** Dashed "marching ants" edges around the copied range. */
-function antsStyle(R: Range, r: number, c: number): React.CSSProperties {
+function antsStyle(top: boolean, bottom: boolean, left: boolean, right: boolean): React.CSSProperties {
   const edge = "2px dashed var(--color-accent)";
-  return {
-    borderTop: r === R.r1 ? edge : undefined,
-    borderBottom: r === R.r2 ? edge : undefined,
-    borderLeft: c === R.c1 ? edge : undefined,
-    borderRight: c === R.c2 ? edge : undefined,
-  };
+  return { borderTop: top ? edge : undefined, borderBottom: bottom ? edge : undefined, borderLeft: left ? edge : undefined, borderRight: right ? edge : undefined };
 }
 
 function EditorText({ text, caret }: { text: string; caret: number }) {

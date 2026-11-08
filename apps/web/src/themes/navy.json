@@ -1,0 +1,15 @@
+{
+  "id": "navy",
+  "label": "Navy",
+  "scheme": "dark",
+  "colors": {
+    "bg": "#0b1526",
+    "panel": "#122038",
+    "line": "#22355a",
+    "sub": "#93a6c8",
+    "text": "#dde6f5",
+    "accent": "#5eb3ff",
+    "warn": "#ffcf5c",
+    "bad": "#ff7a85"
+  }
+}

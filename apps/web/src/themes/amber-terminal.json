@@ -1,0 +1,15 @@
+{
+  "id": "amber-terminal",
+  "label": "Amber terminal",
+  "scheme": "dark",
+  "colors": {
+    "bg": "#0e0a04",
+    "panel": "#1a1308",
+    "line": "#3a2a10",
+    "sub": "#c08a3e",
+    "text": "#ffcf86",
+    "accent": "#ffb000",
+    "warn": "#ffd75e",
+    "bad": "#ff6b4a"
+  }
+}
