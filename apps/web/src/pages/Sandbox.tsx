@@ -19,6 +19,11 @@ const SAMPLE = [
   ["Gross margin", 0.6, 0.609, 0.616, 0.623],
 ];
 
+const releaseFocus = () => {
+  const el = document.activeElement;
+  if (el instanceof HTMLElement && el !== document.body) el.blur();
+};
+
 const fresh = () =>
   createState({
     sheets: [fillFromRows(createSheet(), SAMPLE)],
@@ -74,7 +79,8 @@ export default function Sandbox() {
     <section className="space-y-3 pb-8">
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <h1 className="text-lg font-bold">Sandbox <span className="font-normal text-sub">— free practice, keyboard only</span></h1>
-        <div className="flex items-center gap-2">
+        {/* After a control is used, hand the keyboard back to the grid (the key handler ignores focused controls). */}
+        <div className="flex items-center gap-2" onChange={releaseFocus}>
           <select className="rounded bg-panel px-2 py-1" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}>
             <option value="win">Windows</option>
             <option value="mac">macOS</option>
@@ -84,13 +90,24 @@ export default function Sandbox() {
               <option key={l} value={l}>{LAYOUT_NAMES[l]}</option>
             ))}
           </select>
-          <button className="rounded border border-line px-2 py-1 hover:border-text" onClick={() => setState(fresh())}>
+          <button className="rounded border border-line px-2 py-1 hover:border-text" onClick={() => {
+              setState(fresh());
+              releaseFocus();
+            }}
+          >
             reset
           </button>
         </div>
       </div>
 
-      <Grid state={state} onMouseAttempt={() => setToast(true)} />
+      <Grid
+        state={state}
+        onMouseAttempt={() => {
+          // Clicking the grid gives the keyboard back to it, even though the click itself is blocked.
+          releaseFocus();
+          setToast(true);
+        }}
+      />
 
       <div className="flex justify-between text-xs text-sub">
         <span>
