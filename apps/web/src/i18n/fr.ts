@@ -24,6 +24,7 @@ export const fr: Record<MessageKey, string> = {
   "mode.120s": "120 s",
   "mode.25t": "25 exercices",
   "mode.50t": "50 exercices",
+  "play.intro": "Tu vas vite sur Excel sans souris ? Lis la consigne, fais-la aux raccourcis. Le chrono démarre à ta première touche.",
   "play.allDrills": "tous les exercices",
   "play.restart": "↻ recommencer",
   "play.category": "catégorie",

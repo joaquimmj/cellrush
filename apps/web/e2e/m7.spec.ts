@@ -23,7 +23,8 @@ test.describe("settings, themes and French", () => {
     await page.getByLabel("language").selectOption("fr");
     await expect(page.getByRole("heading", { name: "Réglages" })).toBeVisible();
     await page.getByRole("link", { name: "jouer" }).click();
-    await expect(page.getByText("démarre à ta première touche")).toBeVisible();
+    await expect(page.getByText("démarre à ta première touche", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("intro")).toContainText("sans souris");
     await expect(page.getByTestId("prompt")).not.toHaveText(/^(Jump|Select|Go|Move|Type|Make|Format|Copy|Insert|Delete)\b/);
     await expect(page.locator("html")).toHaveAttribute("lang", "fr");
   });

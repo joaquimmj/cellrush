@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   colToLetters, createSheet, dateToSerial, displayText, getCell, lettersToCol, makeCell, parseA1, parseRange, parseRaw,
-  rangeToA1, setCells, serialToDate, isoToDateText, cellsIn, rangeSize,
+  rangeToA1, setCells, serialToDate, isoToDateText, cellsIn, rangeSize, fitGeneral,
 } from "../src";
 
 describe("addresses", () => {
@@ -65,5 +65,20 @@ describe("sheet immutability", () => {
   it("undefined removes a cell", () => {
     const s1 = setCells(createSheet(), [[parseA1("A1"), makeCell("x")]]);
     expect(Object.keys(setCells(s1, [[parseA1("A1"), undefined]]).cells)).toHaveLength(0);
+  });
+});
+
+describe("General format fits the column (Excel-like)", () => {
+  it.each([
+    [0.6086956522, "0.608696"],
+    [1234.56789, "1234.568"],
+    [-0.123456789, "-0.12346"],
+    [42, "42"],
+    [0.5, "0.5"],
+    [12345678, "12345678"],
+  ])("%s → %s", (n, out) => expect(fitGeneral(n)).toBe(out));
+  it("very large numbers go scientific", () => expect(fitGeneral(123456789012)).toMatch(/^1\.2+\d*E\+\d+$/));
+  it("never longer than the column", () => {
+    for (const n of [1 / 3, -2 / 3, 98765.4321, 0.000123456, -12345.6789]) expect(fitGeneral(n).length).toBeLessThanOrEqual(8);
   });
 });

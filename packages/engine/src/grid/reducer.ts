@@ -1,4 +1,5 @@
-import { cycleAnchor } from "../formula/refs";
+import { cycleAnchor, moveRewrite } from "../formula/refs";
+import type { RefToken } from "../formula/tokenizer";
 import { recalc } from "../formula/recalc";
 import { cellsIn, inRange, rangeOf, rangeSize, rangeToA1, sameRange, toA1, type CellAddr, type Range } from "./address";
 import { copyCellTo, paste, snapshot } from "./clipboard";
@@ -195,8 +196,26 @@ function doPaste(st: GridState, mode: PasteMode): GridState {
   const sameSheet = clip.sheetIndex === st.sheetIndex;
   const res = paste(sheet, clip, selRange(st.sel), mode, sameSheet);
   const sel: Selection = { active: { r: res.range.r1, c: res.range.c1 }, anchor: { r: res.range.r1, c: res.range.c1 }, focus: { r: res.range.r2, c: res.range.c2 } };
+  let sheets = replaceActive(st, res.sheet);
+  if (clip.cut && sameSheet) {
+    // Formulas anywhere that pointed at the moved cells follow them (Excel's cut semantics).
+    const dr = res.range.r1 - clip.range.r1;
+    const dc = res.range.c1 - clip.range.c1;
+    const name = sheet.name.toLowerCase();
+    sheets = sheets.map((sh, i) => {
+      const pointsAtSource = (ref: RefToken) => (ref.sheet === undefined ? i === st.sheetIndex : ref.sheet.toLowerCase() === name);
+      let changed = false;
+      const cells: Record<string, Cell> = {};
+      for (const [k, c] of Object.entries(sh.cells)) {
+        const raw = c.raw.startsWith("=") ? moveRewrite(c.raw, clip.range, dr, dc, pointsAtSource) : c.raw;
+        if (raw !== c.raw) changed = true;
+        cells[k] = raw === c.raw ? c : { ...c, raw };
+      }
+      return changed ? { ...sh, cells } : sh;
+    });
+  }
   // After a cut-paste the clipboard is spent; after a copy it stays for more pastes.
-  return mutateSheet(st, res.sheet, { sel, keepClipboard: !clip.cut });
+  return mutate(st, sheets, { sel, keepClipboard: !clip.cut });
 }
 
 function structural(st: GridState, axis: InsertChoice, insert: boolean): GridState {

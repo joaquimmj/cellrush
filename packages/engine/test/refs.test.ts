@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cycleAnchor, shiftFormula, structuralRewrite, type RefToken } from "../src";
+import { cycleAnchor, moveRewrite, shiftFormula, structuralRewrite, type RefToken } from "../src";
 
 const B = { rows: 60, cols: 26 };
 const here = (_r: RefToken) => true;
@@ -57,4 +57,17 @@ describe("cycleAnchor (F4 / Cmd+T)", () => {
   it("keeps sheet prefixes", () => expect(f4("=Sheet2!C3")).toBe("=Sheet2!$C$3"));
   it("no ref at caret → null", () => expect(cycleAnchor("=1+2", 3)).toBeNull());
   it("not a formula → null", () => expect(cycleAnchor("A1", 2)).toBeNull());
+});
+
+describe("moveRewrite (cut-paste)", () => {
+  const block = { r1: 0, c1: 0, r2: 1, c2: 1 }; // A1:B2
+  const mv = (f: string) => moveRewrite(f, block, 2, 3, here);
+  it.each([
+    ["=A1+B2", "=D3+E4"],
+    ["=$A$1", "=$D$3"],
+    ["=C1", "=C1"],
+    ["=SUM(A1:B2)", "=SUM(D3:E4)"],
+    ["=SUM(A1:C3)", "=SUM(A1:C3)"],
+  ])("%s → %s", (f, out) => expect(mv(f)).toBe(out));
+  it("other sheets' refs stay", () => expect(moveRewrite("=X!A1", block, 2, 3, (r) => r.sheet === undefined)).toBe("=X!A1"));
 });

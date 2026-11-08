@@ -258,3 +258,35 @@ describe("show formulas", () => {
     expect(displayText(cell(st, "B1"), st.showFormulas)).toBe("=A1*3");
   });
 });
+
+describe("cut-paste moves references with the cells (Excel semantics)", () => {
+  it("a formula pointing at the moved cell follows it", () => {
+    let st = grid([[5, "=A1*2"]]);
+    st = keys(st, "ctrl+x, ArrowDown, ArrowDown, ctrl+v"); // A1 → A3
+    expect(raw(st, "B1")).toBe("=A3*2");
+    expect(cell(st, "B1")?.value).toBe(10);
+  });
+  it("a range fully inside the moved block follows; one straddling its edge stays", () => {
+    let st = grid([[1, null, "=SUM(A1:A2)", "=SUM(A1:A3)"], [2], [3]]);
+    st = keys(st, "shift+ArrowDown, ctrl+x, ArrowRight, ctrl+v"); // A1:A2 → B1:B2
+    expect(raw(st, "C1")).toBe("=SUM(B1:B2)");
+    expect(raw(st, "D1")).toBe("=SUM(A1:A3)");
+    expect(cell(st, "C1")?.value).toBe(3);
+  });
+  it("formulas on other sheets that point here follow too", () => {
+    const s1 = fillFromRows(createSheet("Data"), [[7]]);
+    const s2 = fillFromRows(createSheet("Calc"), [["=Data!A1+1"]]);
+    let st = createState({ sheets: [s1, s2] });
+    st = keys(st, "ctrl+x, ArrowRight, ctrl+v");
+    expect(getCell(st.sheets[1]!, parseA1("A1"))?.raw).toBe("=Data!B1+1");
+    expect(getCell(st.sheets[1]!, parseA1("A1"))?.value).toBe(8);
+  });
+  it("copy-paste does not touch other formulas", () => {
+    const st = keys(grid([[5, "=A1*2"]]), "ctrl+c, ArrowDown, ctrl+v");
+    expect(raw(st, "B1")).toBe("=A1*2");
+  });
+  it("undo puts the references back", () => {
+    const st = keys(grid([[5, "=A1*2"]]), "ctrl+x, ArrowDown, ctrl+v, ctrl+z");
+    expect(raw(st, "B1")).toBe("=A1*2");
+  });
+});

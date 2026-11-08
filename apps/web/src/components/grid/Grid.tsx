@@ -5,6 +5,8 @@ import {
 } from "@cellrush/engine";
 
 const ROW_H = 24;
+/** Characters of a General number that fit a column of `px` (13 px monospace ≈ 7.8 px per char + padding). */
+const charsFor = (px: number) => Math.max(4, Math.floor((px - 8) / 7));
 const HEADER_W = 40;
 
 interface Props {
@@ -21,6 +23,9 @@ export default function Grid({ state, onMouseAttempt }: Props) {
   const activeCell = getCell(sheet, active);
   const barText = editing ? state.editor!.text : (activeCell?.raw ?? "");
   const multi = R.r1 !== R.r2 || R.c1 !== R.c2;
+  // A fixed table width keeps columns at their set widths (long values are clipped, as in Excel).
+  let tableWidth = HEADER_W;
+  for (let c = 0; c < sheet.cols; c++) tableWidth += sheet.colWidths[c] ?? DEFAULT_COL_WIDTH;
   const pt = state.editor?.point;
   const point = pt ? rangeOf(pt.anchor, pt.focus) : null;
   const clip = state.clipboard && state.clipboard.sheetIndex === state.sheetIndex ? state.clipboard.range : null;
@@ -44,7 +49,7 @@ export default function Grid({ state, onMouseAttempt }: Props) {
         </div>
       </div>
       <div className="max-h-[60vh] overflow-auto rounded border border-line">
-        <table className="border-collapse text-[13px]" style={{ tableLayout: "fixed" }}>
+        <table className="border-collapse text-[13px]" style={{ tableLayout: "fixed", width: tableWidth }}>
           <colgroup>
             <col style={{ width: HEADER_W }} />
             {Array.from({ length: sheet.cols }, (_, c) => (
@@ -189,7 +194,7 @@ const Row = memo(function Row(p: RowProps) {
         const editing = isActive && p.editorText !== null;
         const selected = c >= p.selC1 && c <= p.selC2 && p.selC1 >= 0 && !isActive;
         const f = cell?.format;
-        const text = editing ? p.editorText! : displayText(cell, p.showFormulas, p.dateStyle);
+        const text = editing ? p.editorText! : displayText(cell, p.showFormulas, p.dateStyle, charsFor(sheet.colWidths[c] ?? DEFAULT_COL_WIDTH));
         const numeric = typeof cell?.value === "number" && !editing;
         const isErr = typeof cell?.value === "object" && cell?.value !== null;
         const pointed = p.pointC1 >= 0 && c >= p.pointC1 && c <= p.pointC2;

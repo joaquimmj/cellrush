@@ -24,6 +24,7 @@ const parseMode = (s: string | null): RunMode | undefined => MODES.find((m) => m
 const randomSeed = () => Math.floor(Math.random() * 2 ** 32);
 
 export default function Play() {
+  const t = useT();
   const env = useMemo(currentEnv, []);
   const [search] = useSearchParams();
   const prefs = useMemo(loadPrefs, []);
@@ -73,9 +74,11 @@ export default function Play() {
   if (env.mobile) {
     return <p className="py-20 text-center text-sub">This game needs a physical keyboard. Open it on a computer.</p>;
   }
+  const intro = run.startedAt === null && run.finishedAt === null;
 
   return (
     <section className="space-y-4 pb-8">
+      {intro && <p className="text-center text-sm text-sub" data-testid="intro">{t("play.intro")}</p>}
       <Settings
         mode={mode} setMode={setMode} platform={platform} setPlatform={setPlatform}
         layout={layout} setLayout={setLayout} category={category} setCategory={setCategory}

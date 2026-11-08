@@ -131,6 +131,26 @@ export function structuralRewrite(
   });
 }
 
+/**
+ * Cut-paste moved `block` by (dr, dc): references into it follow the cells, as in Excel.
+ * A single ref inside the block moves; a range moves only if both ends are inside; anything
+ * else (refs elsewhere, ranges straddling the block edge) is left alone.
+ */
+export function moveRewrite(
+  raw: string,
+  block: { r1: number; c1: number; r2: number; c2: number },
+  dr: number,
+  dc: number,
+  pointsAtSource: (ref: RefToken) => boolean,
+): string {
+  const inside = (r: RefToken) => r.r >= block.r1 && r.r <= block.r2 && r.c >= block.c1 && r.c <= block.c2;
+  const move = (r: RefToken): RefToken => ({ ...r, r: r.r + dr, c: r.c + dc });
+  return rewriteRefs(raw, {
+    ref: (r) => (pointsAtSource(r) && inside(r) ? move(r) : r),
+    range: (a, b) => (pointsAtSource(a) && inside(a) && inside(b) ? [move(a), move(b)] : [a, b]),
+  });
+}
+
 const CYCLE: Array<[boolean, boolean]> = [
   [false, false], // A1
   [true, true], //  $A$1

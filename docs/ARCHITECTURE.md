@@ -29,7 +29,7 @@ formatting, Windows ribbon keytips, and a shortcut registry checked against Micr
 
 Grid side: clipboard with marching ants, Paste Special / Insert / Delete keyboard dialogs,
 Point mode (arrows pick cells while typing a formula), AutoSum, sheet insert/switch.
-Known gap: a cut-paste does not yet re-point other formulas at the moved cells (Excel does).
+Cut-paste re-points every formula that referenced the moved cells, on every sheet (`moveRewrite`).
 
 **M3** adds `packages/drills`: 74 data-first drills (`src/tasks/`), a seeded RNG, synthetic
 data, and a pure run engine (`src/run.ts`: `createRun` → `runKey(run, key, t)` → `scoreRun`).

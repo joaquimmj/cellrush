@@ -24,6 +24,7 @@ export const en = {
   "mode.120s": "120s",
   "mode.25t": "25 tasks",
   "mode.50t": "50 tasks",
+  "play.intro": "How fast are you in Excel without a mouse? Read the task, solve it with shortcuts. The clock starts on your first key.",
   "play.allDrills": "all drills",
   "play.restart": "↻ restart",
   "play.category": "category",

@@ -27,6 +27,7 @@ test.describe("speedrun scenarios", () => {
   test("running out of time ends the scenario with the checklist as it stands", async ({ page }) => {
     await freezeClock(page, "2026-11-20T10:00:00Z");
     await page.goto("/speedrun?scenario=revenue-projection&platform=win&seed=5");
+    await expect(page.getByTestId("prompt")).toBeVisible(); // pages are lazy-loaded: wait before typing
     await page.keyboard.press("Shift+ArrowDown"); // starts the clock
     await page.clock.fastForward(181_000);
     await expect(page.getByTestId("scenario-time")).toHaveText("time's up");

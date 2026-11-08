@@ -39,8 +39,27 @@ export function dateToSerial(y: number, m: number, d: number): number {
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000);
 }
 
-/** Text shown in the cell. */
-export function displayText(cell: Cell | undefined, showFormulas = false, dateStyle: "mdy" | "dmy" = "mdy"): string {
+/**
+ * General format in a cell: like Excel, round so the number fits the column instead of
+ * widening it (0.6086956522 → 0.608696 in a default-width column). Big numbers go scientific.
+ */
+export function fitGeneral(n: number, maxChars = GENERAL_CHARS): string {
+  const full = generalNumber(n);
+  if (full.length <= maxChars) return full;
+  const intLen = String(Math.trunc(Math.abs(n))).length + (n < 0 ? 1 : 0);
+  if (intLen > maxChars) {
+    const digits = Math.max(0, maxChars - 6 - (n < 0 ? 1 : 0)); // "d.ddE+nn"
+    return n.toExponential(digits).replace("e", "E").replace(/E\+?(-?)(\d)$/, "E+$1" + "0$2").replace("E+-", "E-");
+  }
+  const decimals = Math.max(0, maxChars - intLen - 1);
+  return String(Number(n.toFixed(decimals)));
+}
+
+/** Characters of a General number that fit a default-width column. */
+export const GENERAL_CHARS = 8;
+
+/** Text shown in the cell (`maxChars`: how many characters of a General number fit its column). */
+export function displayText(cell: Cell | undefined, showFormulas = false, dateStyle: "mdy" | "dmy" = "mdy", maxChars = GENERAL_CHARS): string {
   if (!cell) return "";
   if (showFormulas && cell.raw.startsWith("=")) return cell.raw;
   const v = cell.value;
@@ -61,6 +80,6 @@ export function displayText(cell: Cell | undefined, showFormulas = false, dateSt
     case "date":
       return serialToDate(v, dateStyle);
     default:
-      return cell.format.decimals !== undefined ? v.toFixed(dec) : generalNumber(v);
+      return cell.format.decimals !== undefined ? v.toFixed(dec) : fitGeneral(v, maxChars);
   }
 }
