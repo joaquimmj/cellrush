@@ -22,3 +22,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+@keyframes cellflash {
+  from { box-shadow: 0 0 0 3px var(--color-accent); }
+  to { box-shadow: 0 0 0 0 transparent; }
+}

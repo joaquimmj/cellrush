@@ -1,6 +1,6 @@
 import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { APP_NAME, DISCLAIMER } from "./config";
-import Home from "./pages/Home";
+import Play from "./pages/Play";
 import Keys from "./pages/Keys";
 import Sandbox from "./pages/Sandbox";
 
@@ -21,7 +21,7 @@ export default function App() {
       </header>
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Play />} />
           <Route path="/keys" element={<Keys />} />
           <Route path="/sandbox" element={<Sandbox />} />
           <Route path="*" element={<p className="py-20 text-center text-sub">404 — nothing in this cell.</p>} />

@@ -30,3 +30,10 @@ formatting, Windows ribbon keytips, and a shortcut registry checked against Micr
 Grid side: clipboard with marching ants, Paste Special / Insert / Delete keyboard dialogs,
 Point mode (arrows pick cells while typing a formula), AutoSum, sheet insert/switch.
 Known gap: a cut-paste does not yet re-point other formulas at the moved cells (Excel does).
+
+**M3** adds `packages/drills`: 74 data-first drills (`src/tasks/`), a seeded RNG, synthetic
+data, and a pure run engine (`src/run.ts`: `createRun` → `runKey(run, key, t)` → `scoreRun`).
+A bot test plays every drill's optimal path on Windows and Mac × four layouts × six seeds.
+The web app's `/` is the timed game (30/60/120 s, 25/50 drills, category filter) with a results
+screen and local personal bests; `apps/web/e2e` plays full 60-second runs in Chrome via Playwright.
+See `SCORING.md` and `ADDING_A_DRILL.md`.

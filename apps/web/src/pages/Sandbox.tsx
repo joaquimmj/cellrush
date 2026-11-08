@@ -5,6 +5,7 @@ import {
 } from "@cellrush/engine";
 import Grid from "../components/grid/Grid";
 import { currentEnv, toRaw } from "../lib/browser-env";
+import { releaseFocus } from "../lib/prefs";
 
 // Synthetic sample data (made up for this demo).
 const SAMPLE = [
@@ -18,11 +19,6 @@ const SAMPLE = [
   [null],
   ["Gross margin", "=B5/B3", "=C5/C3", "=D5/D3", "=E5/E3"],
 ];
-
-const releaseFocus = () => {
-  const el = document.activeElement;
-  if (el instanceof HTMLElement && el !== document.body) el.blur();
-};
 
 const fresh = () =>
   createState({
@@ -44,7 +40,7 @@ export default function Sandbox() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).closest("select, button")) return;
+      if (e.target instanceof Element && e.target.closest("select, button")) return;
       const raw = toRaw(e);
       if (raw.key.length === 1 && !raw.ctrl && !raw.meta && !raw.alt) {
         samples.current = [...samples.current.slice(-20), { code: raw.code, key: raw.key }];
