@@ -37,3 +37,10 @@ A bot test plays every drill's optimal path on Windows and Mac × four layouts �
 The web app's `/` is the timed game (30/60/120 s, 25/50 drills, category filter) with a results
 screen and local personal bests; `apps/web/e2e` plays full 60-second runs in Chrome via Playwright.
 See `SCORING.md` and `ADDING_A_DRILL.md`.
+
+**M4**: `/daily` (same seed for everyone per UTC day and platform, 10 drills, first finished
+attempt is the ranked one, practice afterwards), share text in the §13 format
+(`packages/drills/src/share.ts`), and result links `/r/:id`. Until M5 the id *is* the result
+(base64url, validated on decode) — shareable, not proof. On Vercel, `vercel.json` routes
+`/r/:id` to `apps/web/api/r.ts`, which injects Open Graph tags into the app shell, and
+`apps/web/api/og.ts` renders the 1200×630 card. Both are unit-tested locally; nothing is deployed.

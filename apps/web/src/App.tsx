@@ -1,6 +1,8 @@
 import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { APP_NAME, DISCLAIMER } from "./config";
+import Daily from "./pages/Daily";
 import Play from "./pages/Play";
+import Result from "./pages/Result";
 import Keys from "./pages/Keys";
 import Sandbox from "./pages/Sandbox";
 
@@ -15,6 +17,7 @@ export default function App() {
         </Link>
         <nav className="flex gap-5 text-sm">
           <NavLink to="/" end className={nav}>play</NavLink>
+          <NavLink to="/daily" className={nav}>daily</NavLink>
           <NavLink to="/sandbox" className={nav}>sandbox</NavLink>
           <NavLink to="/keys" className={nav}>keys</NavLink>
         </nav>
@@ -24,6 +27,8 @@ export default function App() {
           <Route path="/" element={<Play />} />
           <Route path="/keys" element={<Keys />} />
           <Route path="/sandbox" element={<Sandbox />} />
+          <Route path="/daily" element={<Daily />} />
+          <Route path="/r/:id" element={<Result />} />
           <Route path="*" element={<p className="py-20 text-center text-sub">404 — nothing in this cell.</p>} />
         </Routes>
       </main>

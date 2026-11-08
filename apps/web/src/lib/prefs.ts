@@ -1,5 +1,5 @@
 import type { LayoutId, Platform } from "@cellrush/engine";
-import type { RunMode } from "@cellrush/drills";
+import type { RunMode, ShareSummary } from "@cellrush/drills";
 
 /** Per-viewer conveniences in localStorage. Every access is guarded: storage can be blocked. */
 function read<T>(key: string, fallback: T): T {
@@ -46,4 +46,18 @@ export function recordScore(key: string, score: number): boolean {
 export function releaseFocus() {
   const el = document.activeElement;
   if (el instanceof HTMLElement && el !== document.body) el.blur();
+}
+
+// ── Daily: the first finished attempt per UTC day and platform is the ranked one ──
+const DAILY = "cellrush.daily.v1";
+const dailyKey = (date: string, platform: Platform) => `${date}-${platform}`;
+export const dailyAttempt = (date: string, platform: Platform): ShareSummary | null =>
+  read<Record<string, ShareSummary>>(DAILY, {})[dailyKey(date, platform)] ?? null;
+/** Stores the attempt only if none exists yet; returns true if this one is the ranked attempt. */
+export function saveDailyAttempt(s: ShareSummary): boolean {
+  const all = read<Record<string, ShareSummary>>(DAILY, {});
+  const k = dailyKey(s.date, s.platform);
+  if (all[k]) return false;
+  write(DAILY, { ...all, [k]: s });
+  return true;
 }

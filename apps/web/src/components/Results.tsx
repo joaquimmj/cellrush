@@ -1,15 +1,19 @@
-import { resultSquare, scoreRun, taskById, type RunState } from "@cellrush/drills";
+import { resultSquare, scoreRun, taskById, type RunState, type ShareSummary } from "@cellrush/drills";
+import ShareBox from "./ShareBox";
 
 interface Props {
   run: RunState;
   pb: { best: number; isNew: boolean } | null;
   onRestart: () => void;
+  share?: ShareSummary;
+  /** Replaces the "play again" line (the Daily has its own). */
+  footer?: React.ReactNode;
 }
 
 const humanize = (id: string) => id.replace(/-/g, " ");
 const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
-export default function Results({ run, pb, onRestart }: Props) {
+export default function Results({ run, pb, onRestart, share, footer }: Props) {
   const s = scoreRun(run);
   const done = run.results.filter((r) => r.status === "done");
   const maxMs = Math.max(1, ...run.results.map((r) => r.ms));
@@ -71,12 +75,16 @@ export default function Results({ run, pb, onRestart }: Props) {
         </p>
       )}
 
+      {share && s.completed > 0 && <ShareBox summary={share} />}
+
+      {footer ?? (
       <p className="text-center text-sm text-sub">
         <button className="rounded border border-line px-3 py-1 text-text hover:border-accent" onClick={onRestart}>
           play again
         </button>{" "}
         or press <kbd className="text-text">Enter</kbd>
       </p>
+      )}
     </div>
   );
 }
