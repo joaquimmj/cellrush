@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { defaultPlatform, type LayoutId, type Platform } from "@cellrush/engine";
-import { SCENARIOS, checklist, conditionLabel, createRun, mulberry32, scenarioText, scoreRun, utcDate, type RunState, type Scenario } from "@cellrush/drills";
+import { SCENARIOS, checklist, conditionLabel, createRun, isRankable, mulberry32, scenarioText, scoreRun, utcDate, type RunState, type Scenario } from "@cellrush/drills";
 import { useT } from "../i18n";
 import { useSettings, type Lang } from "../lib/settings";
 import GameBoard from "../components/GameBoard";
@@ -116,6 +116,7 @@ export default function Speedrun() {
             <div key={s.id} className="flex flex-col rounded border border-line bg-panel p-4">
               <h2 className="font-bold">{scenarioText(s, settings.lang).title}</h2>
               <p className="mt-1 text-xs text-sub">{t("speed.limit", { m: Math.round(s.timeLimitS / 60), n: items.length })}</p>
+              {!isRankable(s, platform) && <p className="mt-1 text-xs text-warn" data-testid="practice-only">{t("speed.practiceOnly")}</p>}
               <ul className="mt-3 flex-1 space-y-1 text-xs text-sub">
                 {items.map((c) => <li key={c.id}>○ {conditionLabel(s.id, c.id, c.label, settings.lang)}</li>)}
               </ul>

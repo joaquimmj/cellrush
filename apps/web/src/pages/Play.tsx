@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { LAYOUT_NAMES, defaultPlatform, type LayoutId, type Platform, type ShortcutCategory } from "@cellrush/engine";
-import { createRun, modeLabel, scoreRun, summarize, utcDate, type RunMode } from "@cellrush/drills";
+import { createRun, modeLabel, scoreRun, summarize, taskPool, utcDate, type RunMode } from "@cellrush/drills";
 import GameBoard from "../components/GameBoard";
 import Results from "../components/Results";
 import SubmitStatus from "../components/SubmitStatus";
@@ -107,6 +107,15 @@ interface SettingsProps {
 
 function Settings(p: SettingsProps) {
   const t = useT();
+  // Hide categories with nothing to play here (e.g. ribbon keytips: Learn mode only for now).
+  const categories = useMemo(
+    () => CATEGORIES.filter((c) => taskPool({ seed: 1, mode: p.mode, platform: p.platform, layout: p.layout, today: "2026-01-01", categories: [c] }).length > 0),
+    [p.mode, p.platform, p.layout],
+  );
+  const { category, setCategory } = p;
+  useEffect(() => {
+    if (category !== "all" && !categories.includes(category)) setCategory("all");
+  }, [categories, category, setCategory]);
   const btn = (active: boolean) => `px-2 py-1 rounded ${active ? "text-accent" : "text-sub hover:text-text"}`;
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded bg-panel px-3 py-2 text-sm" onChange={releaseFocus}>
@@ -126,7 +135,7 @@ function Settings(p: SettingsProps) {
       </div>
       <select aria-label={t("play.category")} className="rounded bg-bg px-2 py-1" value={p.category} onChange={(e) => p.setCategory(e.target.value as ShortcutCategory | "all")}>
         <option value="all">{t("play.allDrills")}</option>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <option key={c} value={c}>{t(`cat.${c}` as MessageKey)}</option>
         ))}
       </select>

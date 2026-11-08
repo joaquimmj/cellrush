@@ -102,7 +102,8 @@ describe("run", () => {
   it("Mac runs never draw Windows-only ribbon drills", () => {
     const run = createRun(cfg({ platform: "mac" }));
     expect(run.pool.some((t) => t.category === "ribbon")).toBe(false);
-    expect(createRun(cfg()).pool.some((t) => t.category === "ribbon")).toBe(true);
+    // Windows ribbon keytips are not on Microsoft's page yet: Learn mode only.
+    expect(createRun(cfg({ mode: { kind: "learn" } })).pool.some((t) => t.category === "ribbon")).toBe(true);
   });
   it("category and difficulty filters", () => {
     const run = createRun(cfg({ categories: ["formatting"], difficulties: [1] }));
@@ -120,7 +121,7 @@ describe("run", () => {
     expect(run.undoCount).toBe(1);
   });
   it("keytip drills score 100% when played optimally", () => {
-    let run = createRun(cfg({ categories: ["ribbon"] }));
+    let run = createRun(cfg({ mode: { kind: "learn" }, categories: ["ribbon"] }));
     ({ run } = playOne(run, 0));
     expect(run.results[0]!.keystrokes).toBe(run.results[0]!.optimal);
   });

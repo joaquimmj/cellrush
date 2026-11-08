@@ -9,6 +9,13 @@ test.describe("speedrun scenarios", () => {
     await expect(page.getByRole("heading", { name: "Clean a data dump" })).toBeVisible();
   });
 
+  test("scenarios that need an unlisted ribbon shortcut are marked practice only", async ({ page }) => {
+    await page.goto("/speedrun?platform=win");
+    await expect(page.getByTestId("practice-only")).toHaveCount(2);
+    await page.getByRole("combobox", { name: "platform" }).selectOption("mac");
+    await expect(page.getByTestId("practice-only")).toHaveCount(0);
+  });
+
   for (const platform of ["win", "mac"] as const) {
     for (const id of ["pnl-banking", "revenue-projection", "clean-data"]) {
       test(`${id} on ${platform}: solved → every box ticked, time shown`, async ({ page }) => {
@@ -20,6 +27,7 @@ test.describe("speedrun scenarios", () => {
         await expect(page.getByTestId("scenario-time")).toHaveText(/^\d:\d\d\.\d$/);
         const all = await page.getByTestId("checklist").locator("li").count();
         await expect(page.getByTestId("checklist").locator('li[data-pass="true"]')).toHaveCount(all);
+        if (platform === "win" && id !== "revenue-projection") await expect(page.getByTestId("submit-status")).toContainText("not ranked");
       });
     }
   }

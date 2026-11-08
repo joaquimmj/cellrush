@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { toSubmission, type RunState } from "@cellrush/drills";
+import { isRankable, scenarioById, toSubmission, type RunState } from "@cellrush/drills";
 import { useT } from "../i18n";
 import { supabase, useAccount } from "../lib/supabase";
 
@@ -22,9 +22,12 @@ export default function SubmitStatus({ run, daily }: { run: RunState; daily: boo
   const { session, profile, ready } = useAccount();
   const [state, setState] = useState<State>({ kind: "idle" });
   const sent = useRef<RunState | null>(null);
+  const mode = run.config.mode;
+  // A scenario that needs a shortcut missing from Microsoft's official page is practice only.
+  const practiceOnly = mode.kind === "scenario" && !isRankable(scenarioById(mode.id)!, run.config.platform);
 
   useEffect(() => {
-    if (!supabase || !session || !profile || run.finishedAt === null || sent.current === run) return;
+    if (practiceOnly || !supabase || !session || !profile || run.finishedAt === null || sent.current === run) return;
     if (run.results.every((r) => r.status !== "done")) return;
     sent.current = run;
     setState({ kind: "sending" });
@@ -40,7 +43,9 @@ export default function SubmitStatus({ run, daily }: { run: RunState; daily: boo
         if (data.ranked) setState({ kind: "ranked", score: data.summary.score });
         else setState({ kind: "unranked", score: data.summary.score, flags: data.flags });
       });
-  }, [run, daily, session, profile]);
+  }, [run, daily, session, profile, practiceOnly]);
+
+  if (practiceOnly) return <p className="text-sm text-sub" data-testid="submit-status">{t("submit.practiceOnly")}</p>;
 
   if (!supabase || !ready) return null;
   if (!session) {

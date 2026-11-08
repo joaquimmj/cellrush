@@ -1,6 +1,7 @@
 import { LAYOUTS, type LayoutId, type Platform } from "@cellrush/engine";
 import { createRun, modeLabel, runKey, scoreRun, tick, timeLimitMs, unpackEvent, type RunEvent, type RunMode, type RunState, type Score } from "./run";
-import { SCENARIOS } from "./scenarios";
+import { isRankable } from "./ranked";
+import { SCENARIOS, scenarioById } from "./scenarios";
 import { DAILY_TASKS, dailyNumber, dailySeed, summarize, utcDate, type ShareSummary } from "./share";
 
 /** What the client sends. It never includes a score: the server computes it. */
@@ -80,6 +81,9 @@ export function validateRun(sub: RunSubmission, nowMs: number): Validation {
   if (sub.platform !== "win" && sub.platform !== "mac") return refuse("bad platform");
   if (!(sub.layout in LAYOUTS)) return refuse("bad layout");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(sub.today)) return refuse("bad date");
+  if (sub.mode.kind === "scenario" && !isRankable(scenarioById(sub.mode.id)!, sub.platform)) {
+    return refuse("practice only: this scenario uses a shortcut that is not on Microsoft's official list");
+  }
   if (sub.events.length === 0 || sub.events.length > LIMITS.maxEvents) return refuse("bad event count");
 
   for (let i = 0; i < sub.events.length; i++) {

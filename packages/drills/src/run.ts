@@ -1,5 +1,6 @@
 import { dispatchKey, isModifierOnly, type GridState, type LayoutId, type Platform, type RawKey, type ShortcutCategory } from "@cellrush/engine";
 import { isReady } from "./data";
+import { isRankable } from "./ranked";
 import { mixSeed, mulberry32, type Rng } from "./rng";
 import { strokeCount } from "./strokes";
 import { scenarioById } from "./scenarios";
@@ -99,8 +100,12 @@ export function taskPool(config: RunConfig): Task[] {
     return sc ? [sc] : [];
   }
   // A drill with no path on this platform (e.g. ribbon keytips on Mac) is left out.
+  // Ranked modes (timed, task count, Daily) only use shortcuts on Microsoft's official page;
+  // the others stay in Learn mode.
+  const ranked = config.mode.kind === "time" || config.mode.kind === "tasks";
   return TASKS.filter((t) => optimalFor(t, config) !== null).filter(
     (t) =>
+      (!ranked || isRankable(t, config.platform)) &&
       (!config.categories?.length || config.categories.includes(t.category)) &&
       (!config.difficulties?.length || config.difficulties.includes(t.difficulty)) &&
       (config.isPlayable?.(t) ?? true),

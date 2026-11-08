@@ -51,7 +51,7 @@ Plus amber terminal, navy, paper, high contrast and navy & gold. [Add yours →]
 | | Windows | macOS |
 |---|---|---|
 | Shortcut set | Excel for Windows | Excel for Mac (Cmd-based). No invented equivalents: drills with no Mac shortcut (ribbon keytips, font colour) are Windows-only. |
-| Source | Shortcuts are checked against Microsoft's [Keyboard shortcuts in Excel](https://support.microsoft.com/en-us/office/keyboard-shortcuts-in-excel-1798d9d5-842a-42b8-9c99-9b7213f0040f), per platform, and each one records whether it was (`verified` in the [registry](packages/engine/src/keymap/registry.ts)). A few Windows ribbon keytips (Alt, H, O, I…) aren't on that page and are marked unverified. | same |
+| Source | Shortcuts are checked against Microsoft's [Keyboard shortcuts in Excel](https://support.microsoft.com/en-us/office/keyboard-shortcuts-in-excel-1798d9d5-842a-42b8-9c99-9b7213f0040f), per platform, and each one records whether it was (`verified` in the [registry](packages/engine/src/keymap/registry.ts)). A few Windows ribbon keytips (Alt, H, O, I…) aren't on that page: they're marked unverified and stay in Learn mode and practice runs, never in ranked modes or the Daily ([ranked.ts](packages/drills/src/ranked.ts)). | same |
 | Layouts | US, UK, French AZERTY, German QWERTZ: letter shortcuts follow the printed key, digit-row shortcuts the physical key ([details](docs/KEYBOARD.md)). | same |
 
 **Browsers.** Chrome and Edge give the most keys to the page, and fullscreen + Keyboard Lock frees
