@@ -12,3 +12,4 @@ test-results/
 .vercel/
 supabase/.temp/
 .gstack/
+supabase/functions/_shared/*.gen.js

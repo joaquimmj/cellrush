@@ -78,6 +78,17 @@ export function useRun({ makeRun, layout, setLayout, restartOnEnter = true }: Op
     return () => window.removeEventListener("keydown", onKey);
   }, [layout, setLayout, restart, restartOnEnter]);
 
+  // Background tabs throttle timers: re-check the clock as soon as the tab is visible again.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      const next = tick(runRef.current, performance.now());
+      if (next !== runRef.current) setRun(next);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   // Clock: drives the countdown and ends timed runs.
   useEffect(() => {
     if (run.startedAt === null || run.finishedAt !== null) return;

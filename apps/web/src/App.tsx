@@ -1,6 +1,10 @@
 import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { APP_NAME, DISCLAIMER } from "./config";
+import { supabase, useAccount } from "./lib/supabase";
 import Daily from "./pages/Daily";
+import Leaderboard from "./pages/Leaderboard";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import Play from "./pages/Play";
 import Result from "./pages/Result";
 import Keys from "./pages/Keys";
@@ -18,8 +22,10 @@ export default function App() {
         <nav className="flex gap-5 text-sm">
           <NavLink to="/" end className={nav}>play</NavLink>
           <NavLink to="/daily" className={nav}>daily</NavLink>
+          <NavLink to="/leaderboard" className={nav}>leaderboard</NavLink>
           <NavLink to="/sandbox" className={nav}>sandbox</NavLink>
           <NavLink to="/keys" className={nav}>keys</NavLink>
+          <AccountLink />
         </nav>
       </header>
       <main className="flex-1">
@@ -29,6 +35,9 @@ export default function App() {
           <Route path="/sandbox" element={<Sandbox />} />
           <Route path="/daily" element={<Daily />} />
           <Route path="/r/:id" element={<Result />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<p className="py-20 text-center text-sub">404 — nothing in this cell.</p>} />
         </Routes>
       </main>
@@ -36,5 +45,15 @@ export default function App() {
         <p>{DISCLAIMER}</p>
       </footer>
     </div>
+  );
+}
+
+function AccountLink() {
+  const { session, profile } = useAccount();
+  if (!supabase) return null;
+  return session ? (
+    <NavLink to="/profile" className={nav}>{profile?.display_name ?? "profile"}</NavLink>
+  ) : (
+    <NavLink to="/login" className={nav}>sign in</NavLink>
   );
 }

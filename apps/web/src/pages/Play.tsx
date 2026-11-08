@@ -4,6 +4,7 @@ import { LAYOUT_NAMES, defaultPlatform, type LayoutId, type Platform, type Short
 import { createRun, scoreRun, summarize, utcDate, type RunMode } from "@cellrush/drills";
 import GameBoard from "../components/GameBoard";
 import Results from "../components/Results";
+import SubmitStatus from "../components/SubmitStatus";
 import { currentEnv } from "../lib/browser-env";
 import { loadPrefs, modeKey, personalBest, recordScore, releaseFocus, savePrefs } from "../lib/prefs";
 import { useRun } from "../lib/useRun";
@@ -81,7 +82,7 @@ export default function Play() {
         onRestart={restart}
       />
       {run.finishedAt !== null ? (
-        <Results run={run} pb={pb} onRestart={restart} share={summarize(run, { daily: null, mode: modeLabel(run.config.mode).replace(" tasks", "t") })} />
+        <Results run={run} pb={pb} onRestart={restart} status={<SubmitStatus run={run} daily={false} />} share={summarize(run, { daily: null, mode: modeLabel(run.config.mode).replace(" tasks", "t") })} />
       ) : (
         <GameBoard run={run} now={now} flash={flash} />
       )}

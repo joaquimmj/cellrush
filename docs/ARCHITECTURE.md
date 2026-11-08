@@ -44,3 +44,10 @@ attempt is the ranked one, practice afterwards), share text in the §13 format
 (base64url, validated on decode) — shareable, not proof. On Vercel, `vercel.json` routes
 `/r/:id` to `apps/web/api/r.ts`, which injects Open Graph tags into the app shell, and
 `apps/web/api/og.ts` renders the 1200×630 card. Both are unit-tested locally; nothing is deployed.
+
+**M5**: Supabase (local first, see `SERVER.md`). Schema with RLS in `supabase/migrations/`;
+`supabase/functions/submit-run` replays submitted keystrokes with the bundled engine
+(`validateRun` in `packages/drills/src/validate.ts`), applies anti-cheat checks and rate limits,
+and is the only writer of `runs`. Web: magic-link sign-in, profile (name, country, school,
+platform), automatic submission with the server's verdict, `/leaderboard` (daily, modes,
+schools, countries). `packages/server-tests` runs against the local stack (`pnpm test:db`).

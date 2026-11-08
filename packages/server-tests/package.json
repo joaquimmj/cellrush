@@ -1,0 +1,19 @@
+{
+  "name": "@cellrush/server-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:db": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cellrush/drills": "workspace:*",
+    "@cellrush/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "2.45.4",
+    "@types/node": "22.9.0"
+  }
+}

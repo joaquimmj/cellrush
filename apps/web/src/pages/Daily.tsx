@@ -7,6 +7,7 @@ import {
 import GameBoard from "../components/GameBoard";
 import Results from "../components/Results";
 import ShareBox from "../components/ShareBox";
+import SubmitStatus from "../components/SubmitStatus";
 import { currentEnv } from "../lib/browser-env";
 import { dailyAttempt, loadPrefs, releaseFocus, saveDailyAttempt } from "../lib/prefs";
 import { useRun } from "../lib/useRun";
@@ -97,6 +98,7 @@ export default function Daily() {
           pb={null}
           onRestart={playAgain}
           share={practice ? undefined : summary}
+          status={practice ? undefined : <SubmitStatus run={run} daily />}
           footer={
             <div className="space-y-3 text-center text-sm">
               {practice && ranked && (

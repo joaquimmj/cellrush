@@ -6,6 +6,8 @@ interface Props {
   pb: { best: number; isNew: boolean } | null;
   onRestart: () => void;
   share?: ShareSummary;
+  /** Server submission status (signed-in players). */
+  status?: React.ReactNode;
   /** Replaces the "play again" line (the Daily has its own). */
   footer?: React.ReactNode;
 }
@@ -13,7 +15,7 @@ interface Props {
 const humanize = (id: string) => id.replace(/-/g, " ");
 const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
-export default function Results({ run, pb, onRestart, share, footer }: Props) {
+export default function Results({ run, pb, onRestart, share, footer, status }: Props) {
   const s = scoreRun(run);
   const done = run.results.filter((r) => r.status === "done");
   const maxMs = Math.max(1, ...run.results.map((r) => r.ms));
@@ -75,6 +77,7 @@ export default function Results({ run, pb, onRestart, share, footer }: Props) {
         </p>
       )}
 
+      {status}
       {share && s.completed > 0 && <ShareBox summary={share} />}
 
       {footer ?? (
